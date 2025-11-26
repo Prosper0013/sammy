@@ -2,259 +2,207 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ALGORN PnL</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PNL Card</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* ===========================
-   GLOBAL + LANDSCAPE ONLY
-=========================== */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    background: url("logo.jpg") no-repeat center center/cover;
-    filter: blur(0px);
-}
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Poppins", sans-serif;
+        background: #0d0d0d;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+    }
 
-#rotateMessage {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: #000;
-    color: #fff;
-    font-size: 26px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 30px;
-}
+    /* -------- LANDSCAPE ONLY -------- */
+    @media screen and (orientation: portrait) {
+        body::before {
+            content: "Rotate your phone → Landscape mode required";
+            color: white;
+            font-size: 22px;
+            text-align: center;
+            padding: 40px;
+        }
+        .pnl-card { display: none; }
+    }
 
-@media screen and (orientation: portrait) {
-    #mainContent { display: none; }
-    #rotateMessage { display: flex; }
-}
+    .pnl-card {
+        width: 90%;
+        max-width: 950px;
+        background: radial-gradient(circle at top, #1d1d1d, #0d0d0d);
+        padding: 25px;
+        border-radius: 22px;
+        box-shadow: 0 0 25px rgba(0,255,200,0.35);
+        border: 1px solid rgba(0,255,200,0.25);
+        color: white;
+        position: relative;
+    }
 
-@media screen and (orientation: landscape) {
-    #mainContent { display: block; }
-    #rotateMessage { display: none; }
-}
+    .top-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
 
-/* ===========================
-   MAIN LANDSCAPE CARD
-=========================== */
-.pnl_container {
-    width: 92%;
-    margin: 20px auto;
-    padding: 30px;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(14px);
-    border-radius: 22px;
-    color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+    /* Left user info */
+    .user-left {
+        text-align: left;
+    }
+    .user-left .username {
+        font-size: 20px;
+        font-weight: 600;
+    }
+    .user-left .balance {
+        font-size: 16px;
+        color: #00ffc8;
+        margin-top: 3px;
+    }
 
-/* ===========================
-   LEFT SIDE (User + Balance)
-=========================== */
-.leftInfo {
-    width: 26%;
-}
+    /* Right logo + bot name */
+    .logo-area {
+        text-align: right;
+    }
+    .logo-area img {
+        width: 60px;
+        height: 60px;
+    }
+    .bot-name {
+        font-size: 22px;
+        font-weight: 700;
+        margin-top: 5px;
+    }
+    .token-name {
+        font-size: 17px;
+        margin-top: 3px;
+    }
+    .token-ticker {
+        font-size: 15px;
+        opacity: 0.7;
+    }
 
-.leftInfo h3 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: bold;
-}
+    /* Middle section with QR + rocket + PnL */
+    .middle-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 25px;
+    }
 
-.leftItem {
-    margin-top: 16px;
-    font-size: 15px;
-    color: #ccc;
-}
+    /* Left QR + referral */
+    .ref-sec {
+        width: 25%;
+        text-align: center;
+    }
+    .ref-sec img {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 10px;
+    }
+    .ref-text {
+        font-size: 13px;
+        line-height: 16px;
+        word-wrap: break-word;
+    }
 
-/* ===========================
-   MIDDLE LEFT (Contract + Referral)
-=========================== */
-.refBox {
-    width: 24%;
-    padding: 16px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 14px;
-}
+    /* Rocket image */
+    .rocket-sec img {
+        width: 160px;
+        height: auto;
+        filter: drop-shadow(0 0 10px rgba(100,200,255,0.4));
+    }
 
-.refBox p {
-    margin: 0;
-    font-size: 14px;
-    color: #ddd;
-}
+    /* PNL BOX */
+    .pnl-box {
+        width: 40%;
+        background: #111;
+        padding: 18px;
+        border-radius: 18px;
+        box-shadow: 0 0 20px rgba(0,255,200,0.25);
+        border: 1px solid rgba(0,255,200,0.35);
+        text-align: left;
+    }
+    .pnl-title {
+        font-size: 22px;
+        margin-bottom: 8px;
+    }
+    .pnl-value.profit {
+        font-size: 34px;
+        color: #00ff7b;
+        font-weight: 800;
+    }
+    .pnl-value.loss {
+        font-size: 34px;
+        color: #ff3b3b;
+        font-weight: 800;
+    }
 
-#refQR {
-    width: 110px;
-    height: 110px;
-    margin-top: 12px;
-    background: #fff;
-    padding: 6px;
-    border-radius: 10px;
-}
-
-/* ===========================
-   TOP RIGHT (Logo + ALGORN)
-=========================== */
-.rightTop {
-    width: 26%;
-    text-align: right;
-}
-
-#botLogo {
-    width: 65px;
-    height: 65px;
-    border-radius: 14px;
-    margin-bottom: 8px;
-}
-
-#botName {
-    font-size: 26px;
-    font-weight: bold;
-    margin: 0;
-}
-
-.tokenName {
-    font-size: 20px;
-    margin: 4px 0 0 0;
-}
-
-.tokenTicker {
-    color: #bbb;
-    margin: 0;
-    font-size: 14px;
-}
-
-/* ===========================
-   RIGHT SIDE (Rocket + PNL)
-=========================== */
-.rightPNL {
-    width: 22%;
-    text-align: center;
-}
-
-#rocketImg {
-    width: 110px;
-    margin-bottom: 10px;
-}
-
-.pnlValue {
-    font-size: 52px;
-    font-weight: bold;
-}
-
-.pnlProfit { color: #00e07a; }
-.pnlLoss { color: #ff4545; }
-
-.smallAmount {
-    margin-top: 4px;
-    color: #ddd;
-    font-size: 16px;
-}
+    /* Mini chart thumbnail */
+    .chart-thumb {
+        margin-top: 15px;
+        width: 100%;
+        height: 70px;
+        background: url("mini_chart_url_here") no-repeat center/cover;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
 </style>
 
 </head>
 <body>
 
-<!-- ROTATE WARNING -->
-<div id="rotateMessage">
-    Please rotate your device to <b>landscape</b> to view your PnL report.
-</div>
+<div class="pnl-card">
 
-<!-- MAIN CONTENT -->
-<div id="mainContent">
+    <!-- TOP ROW -->
+    <div class="top-row">
 
-    <div class="pnl_container">
+        <!-- Left: User Info -->
+        <div class="user-left">
+            <div class="username">@UsernameHere</div>
+            <div class="balance">Balance: 12,500 TOKEN</div>
+        </div>
 
-        <!-- LEFT SECTION -->
-        <div class="leftInfo">
-            <h3 id="userTelegram">@username</h3>
+        <!-- Right: Logo + Bot Name + Token info -->
+        <div class="logo-area">
+            <img src="your_bot_logo_url" alt="">
+            <div class="bot-name">ALGORN</div>
+            <div class="token-name">Token Name Here</div>
+            <div class="token-ticker">TICKER</div>
+        </div>
+    </div>
 
-            <div class="leftItem">
-                <b>Wallet Balance:</b>
-                <div id="walletBalance">0.00</div>
+    <!-- MIDDLE SECTION -->
+    <div class="middle-section">
+
+        <!-- LEFT REFERRAL ADDRESS + QR -->
+        <div class="ref-sec">
+            <img src="your_qr_code_url" alt="QR Code">
+            <div class="ref-text">
+                Referral:<br>
+                https://t.me/yourbot?start=USERCODE
             </div>
         </div>
 
-        <!-- CONTRACT + REFERRAL -->
-        <div class="refBox">
-            <p><b>Contract:</b></p>
-            <p id="tokenContract">---</p>
-            <br>
-            <p><b>Your Referral Link:</b></p>
-            <p id="refLink">---</p>
-
-            <img id="refQR" src="">
+        <!-- ROCKET IMAGE -->
+        <div class="rocket-sec">
+            <img src="your_rocket_image_url" alt="">
         </div>
 
-        <!-- LOGO + BOT INFO -->
-        <div class="rightTop">
-            <img id="botLogo" src="logo.jpg">
-            <h1 id="botName">ALGORN</h1>
-            <p class="tokenName" id="tokenName">Token Name</p>
-            <p class="tokenTicker" id="tokenTicker">$TICKER</p>
-        </div>
+        <!-- PNL BOX -->
+        <div class="pnl-box">
+            <div class="pnl-title">PNL</div>
 
-        <!-- PNL + ROCKET -->
-        <div class="rightPNL">
-            <img id="rocketImg" src="rocket.png">
+            <!-- Change class to loss if negative -->
+            <div class="pnl-value profit">+45.3%</div>
 
-            <div id="pnlValue" class="pnlValue">0%</div>
-            <div id="pnlAmount" class="smallAmount">$0.00</div>
+            <div class="chart-thumb"></div>
         </div>
 
     </div>
-
 </div>
-
-<!-- JS FOR PARAMS + QR -->
-<script>
-const params = new URLSearchParams(window.location.search);
-
-// Values
-const user = params.get("user") || "@unknown";
-const balance = params.get("balance") || "0";
-const contract = params.get("contract") || "N/A";
-const name = params.get("name") || "Unnamed Token";
-const ticker = params.get("symbol") || "---";
-const pnl = parseFloat(params.get("pnl_percent")) || 0;
-const pnlAmount = parseFloat(params.get("pnl_amount")) || 0;
-const ref = params.get("ref") || "https://algorn.ai/ref";
-
-// Update DOM
-document.getElementById("userTelegram").textContent = user;
-document.getElementById("walletBalance").textContent = balance;
-document.getElementById("tokenContract").textContent = contract;
-document.getElementById("tokenName").textContent = name;
-document.getElementById("tokenTicker").textContent = "$" + ticker;
-document.getElementById("refLink").textContent = ref;
-
-// PNL Color
-const pnlBox = document.getElementById("pnlValue");
-
-pnlBox.textContent = (pnl > 0 ? "+" : "") + pnl.toFixed(2) + "%";
-document.getElementById("pnlAmount").textContent =
-    (pnlAmount > 0 ? "+" : "-") + "$" + Math.abs(pnlAmount).toFixed(2);
-
-if (pnl >= 0) {
-    pnlBox.classList.add("pnlProfit");
-} else {
-    pnlBox.classList.add("pnlLoss");
-}
-
-// QR CODE generator (Google chart)
-document.getElementById("refQR").src =
-    "https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(ref);
-</script>
 
 </body>
 </html>
