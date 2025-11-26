@@ -14,110 +14,147 @@
 :root {
     --adv-green: #00c46b;
     --adv-red: #ff4949;
-    --adv-bg1: #1d1e26;
-    --adv-bg2: #101116;
+    --adv-bg1: rgba(0,0,0,0.55);
+    --adv-bg2: rgba(0,0,0,0.4);
     --adv-glow1: rgba(0,255,180,0.35);
     --adv-glow2: rgba(0,150,255,0.25);
 }
 
-/* MAIN CARD */
+/* FULLSCREEN BACKGROUND */
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    /* YOUR BACKGROUND IMAGE HERE */
+    background: url('logo.jpg') no-repeat center center / cover;
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    overflow: hidden;
+}
+
+/* DARK OVERLAY ON BACKGROUND TO IMPROVE VISIBILITY */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(15px);
+    z-index: 0;
+}
+
+/* MAIN CARD — MATCHING THE IMAGE SIZE YOU UPLOADED */
 .adv_tokenCard {
-    width: 330px;
-    margin: 20px auto;
-    background: linear-gradient(145deg, var(--adv-bg1), var(--adv-bg2), var(--adv-bg1));
-    padding: 22px;
+    width: 850px;          /* MATCHES THE WIDTH OF YOUR SAMPLE IMAGE */
+    height: auto;
+    padding: 40px 50px;
+
+    background: linear-gradient(145deg, var(--adv-bg1), var(--adv-bg2));
     border-radius: 22px;
+
     position: relative;
     overflow: hidden;
-    box-shadow: 0 0 22px var(--adv-glow1), inset 0 0 25px var(--adv-glow2);
+    box-shadow: 0 0 32px rgba(0,0,0,0.45);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
     font-family: Arial, sans-serif;
+    z-index: 10;
 }
 
 /* WATERMARK */
 .adv_watermark {
     position: absolute;
-    top: -45px;
-    right: -45px;
-    width: 160px;
-    height: 160px;
+    top: -120px;
+    right: -120px;
+    width: 300px;
+    height: 300px;
     background: rgba(255,255,255,0.04);
     border-radius: 50%;
-    filter: blur(3px);
+    filter: blur(15px);
 }
 
-/* ACTION BADGE (Profit or Loss) */
+/* ACTION BADGE */
 .adv_actionBadge {
     position: absolute;
-    top: 14px;
-    left: 14px;
-    padding: 6px 16px;
+    top: 25px;
+    left: 25px;
+    padding: 10px 24px;
     border-radius: 50px;
-    font-size: 13px;
+    font-size: 18px;
     font-weight: bold;
     color: white;
-    z-index: 10;
+    z-index: 20;
 }
-.adv_profit { background: var(--adv-green); box-shadow: 0 0 12px var(--adv-green); }
-.adv_loss { background: var(--adv-red); box-shadow: 0 0 12px var(--adv-red); }
+.adv_profit { background: var(--adv-green); box-shadow: 0 0 22px var(--adv-green); }
+.adv_loss { background: var(--adv-red); box-shadow: 0 0 22px var(--adv-red); }
 
-/* TOP: LOGO + NAME */
+/* TOP ROW */
 .adv_topRow {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     align-items: center;
 }
 
 .adv_tokenLogo {
-    width: 55px;
-    height: 55px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
-    box-shadow: 0 0 12px rgba(0,255,180,0.28);
 }
 
 .adv_tokenName {
     margin: 0;
-    font-size: 20px;
+    font-size: 36px;
     font-weight: 700;
     color: #fff;
 }
 
 .adv_tokenSymbol {
     margin: 0;
-    color: #aaa;
-    font-size: 14px;
+    color: #ccc;
+    font-size: 20px;
 }
 
 /* STATS */
 .adv_statsBox {
     display: flex;
     justify-content: space-between;
-    margin-top: 22px;
+    margin-top: 25px;
+    gap: 20px;
 }
 
 .adv_statItem { text-align: center; }
 
 .adv_statLabel {
-    font-size: 12px;
-    color: #999;
+    font-size: 16px;
+    color: #bbb;
 }
 .adv_statValue {
-    margin-top: 3px;
-    font-size: 16px;
+    margin-top: 6px;
+    font-size: 22px;
     font-weight: bold;
     color: #fff;
 }
 
 /* PnL DISPLAY */
 .adv_pnlBox {
-    margin-top: 20px;
-    padding: 14px;
+    margin-top: 35px;
+    padding: 20px;
     border-radius: 14px;
     text-align: center;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.07);
 }
 
 .adv_pnlValue {
-    font-size: 24px;
+    font-size: 52px;
     font-weight: bold;
 }
 
@@ -128,151 +165,33 @@
 .adv_networkBadge {
     background: linear-gradient(45deg, #667eea, #764ba2);
     color: white;
-    padding: 4px 12px;
+    padding: 4px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: bold;
     display: inline-block;
     margin-top: 8px;
 }
 
-/* RESPONSIVE */
-@media (max-width: 450px) {
-    .adv_tokenCard { width: 92%; }
-}
-
 /* BOT BRANDING */
 .adv_botBrand {
     text-align: center;
-    margin-top: 15px;
-    color: #666;
-    font-size: 12px;
+    margin-top: 20px;
+    color: #aaa;
+    font-size: 14px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .adv_tokenCard {
+        width: 92%;
+        padding: 25px;
+    }
+    .adv_pnlValue {
+        font-size: 36px;
+    }
 }
 </style>
 </head>
 
 <body>
-
-<!-- FULL TOKEN CARD -->
-<div class="adv_tokenCard">
-
-    <div class="adv_watermark"></div>
-
-    <!-- Profit/Loss badge -->
-    <div id="adv_statusBadge" class="adv_actionBadge adv_profit">PROFIT</div>
-
-    <!-- Top section -->
-    <div class="adv_topRow">
-        <img id="adv_tokenLogo" src="https://raw.githubusercontent.com/Prosper0013/sammy/refs/heads/main/logo.jpg" class="adv_tokenLogo">
-        <div>
-            <h2 class="adv_tokenName" id="adv_tokenName">Loading...</h2>
-            <p class="adv_tokenSymbol" id="adv_tokenSymbol">$---</p>
-            <div class="adv_networkBadge" id="adv_network">SOLANA</div>
-        </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="adv_statsBox">
-        <div class="adv_statItem">
-            <p class="adv_statLabel">Current Price</p>
-            <p class="adv_statValue" id="adv_price">$---</p>
-        </div>
-        <div class="adv_statItem">
-            <p class="adv_statLabel">Your Balance</p>
-            <p class="adv_statValue" id="adv_balance">---</p>
-        </div>
-        <div class="adv_statItem">
-            <p class="adv_statLabel">Current Value</p>
-            <p class="adv_statValue" id="adv_value">$---</p>
-        </div>
-    </div>
-
-    <!-- PnL Box -->
-    <div class="adv_pnlBox">
-        <div style="color:#ccc; font-size:14px;">Your PnL:</div>
-        <div id="adv_pnlValue" class="adv_pnlValue profitColor">+0.0%</div>
-        <div style="color:#ccc; font-size:12px; margin-top: 5px;" id="adv_pnlAmount">$0.00</div>
-    </div>
-
-    <!-- Additional Info -->
-    <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 12px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-            <span style="color: #999;">Avg Buy Price:</span>
-            <span style="color: #fff;" id="adv_avgPrice">$---</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-            <span style="color: #999;">Total Invested:</span>
-            <span style="color: #fff;" id="adv_invested">$---</span>
-        </div>
-    </div>
-
-    <!-- Address -->
-    <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.07); border-radius: 10px; text-align: center;">
-        <p style="color: #ccc; font-size: 11px; margin: 0;" id="adv_tokenAddress">Contract: Loading...</p>
-    </div>
-
-    <!-- Bot Branding -->
-    <div class="adv_botBrand">
-        Generated by Multi-Chain Trader Bot
-    </div>
-
-</div>
-
-<script>
-// Get URL parameters
-const urlParams = new URLSearchParams(window.location.search);
-
-// Extract data from URL parameters
-const tokenName = urlParams.get('name') || 'Unknown Token';
-const tokenSymbol = urlParams.get('symbol') || 'UNKNOWN';
-const network = urlParams.get('network') || 'SOLANA';
-const currentPrice = parseFloat(urlParams.get('price')) || 0;
-const balance = parseFloat(urlParams.get('balance')) || 0;
-const pnlPercent = parseFloat(urlParams.get('pnl_percent')) || 0;
-const pnlAmount = parseFloat(urlParams.get('pnl_amount')) || 0;
-const currentValue = parseFloat(urlParams.get('current_value')) || 0;
-const avgPrice = parseFloat(urlParams.get('avg_price')) || 0;
-const totalInvested = parseFloat(urlParams.get('invested')) || 0;
-const tokenAddress = urlParams.get('address') || '';
-const tokenLogo = urlParams.get('logo') || 'https://raw.githubusercontent.com/Prosper0013/sammy/refs/heads/main/logo.jpg';
-
-// Update DOM with data
-document.getElementById('adv_tokenName').textContent = tokenName;
-document.getElementById('adv_tokenSymbol').textContent = `$${tokenSymbol}`;
-document.getElementById('adv_network').textContent = network.toUpperCase();
-document.getElementById('adv_price').textContent = `$${currentPrice.toFixed(6)}`;
-document.getElementById('adv_balance').textContent = balance.toFixed(6);
-document.getElementById('adv_value').textContent = `$${currentValue.toFixed(2)}`;
-document.getElementById('adv_avgPrice').textContent = `$${avgPrice.toFixed(6)}`;
-document.getElementById('adv_invested').textContent = `$${totalInvested.toFixed(2)}`;
-document.getElementById('adv_tokenAddress').textContent = `Contract: ${tokenAddress.substring(0, 8)}...${tokenAddress.substring(tokenAddress.length - 6)}`;
-document.getElementById('adv_tokenLogo').src = tokenLogo;
-
-// Update PnL display
-const pnlDisplay = document.getElementById("adv_pnlValue");
-const pnlAmountDisplay = document.getElementById("adv_pnlAmount");
-const badge = document.getElementById("adv_statusBadge");
-
-pnlDisplay.textContent = (pnlPercent >= 0 ? "+" : "") + pnlPercent.toFixed(2) + "%";
-pnlAmountDisplay.textContent = (pnlAmount >= 0 ? "+" : "") + "$" + Math.abs(pnlAmount).toFixed(2);
-
-if (pnlPercent >= 0) {
-    pnlDisplay.classList.remove("lossColor");
-    pnlDisplay.classList.add("profitColor");
-    badge.classList.remove("adv_loss");
-    badge.classList.add("adv_profit");
-    badge.textContent = "PROFIT";
-} else {
-    pnlDisplay.classList.remove("profitColor");
-    pnlDisplay.classList.add("lossColor");
-    badge.classList.remove("adv_profit");
-    badge.classList.add("adv_loss");
-    badge.textContent = "LOSS";
-}
-
-// Update page title and meta tags
-document.title = `PnL - ${tokenSymbol} - ${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%`;
-</script>
-
-</body>
-</html>
