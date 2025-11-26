@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Advanced Token Card</title>
+
+<style>
+
+/* ===== GLOBAL WRAPPER ===== */
+.adv_globalWrapper {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0b0d;
+    padding: 20px;
+}
+
+/* ===== CARD WRAPPER ===== */
+.adv_tokenCard {
+    width: 330px;
+    background: linear-gradient(145deg, #15161c, #0f1014, #15161c);
+    padding: 22px;
+    border-radius: 24px;
+    position: relative;
+    overflow: hidden;
+    animation: adv_fadeIn 0.9s ease-in-out;
+    box-shadow: 0 0 30px rgba(0, 255, 200, 0.25);
+    transition: 0.35s;
+}
+
+.adv_tokenCard:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 40px rgba(0, 255, 160, 0.45);
+}
+
+/* Animated Gradient */
+@keyframes adv_gradientAnim {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.adv_tokenCard {
+    background-size: 200% 200%;
+    animation: adv_gradientAnim 6s ease infinite;
+}
+
+/* Fade In */
+@keyframes adv_fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Watermark */
+.adv_watermark {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+    filter: blur(4px);
+    z-index: 1;
+}
+
+/* ===== HEADER ROW ===== */
+.adv_topRow {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    z-index: 2;
+}
+
+.adv_tokenLogo {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0,255,200,0.3);
+}
+
+.adv_tokenName {
+    font-size: 20px;
+    margin: 0;
+    color: white;
+}
+.adv_tokenSymbol {
+    margin: 0;
+    color: #aaa;
+    font-size: 14px;
+}
+
+/* Rank Badge */
+.adv_rankBadge {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: #00c4ff;
+    color: black;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* ===== PRICE ROW ===== */
+.adv_priceRow {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.adv_priceValue {
+    color: white;
+    font-size: 22px;
+    font-weight: 600;
+    animation: adv_priceBlink 1.4s infinite;
+}
+
+@keyframes adv_priceBlink {
+    0% { opacity: 1; }
+    50% { opacity: .78; }
+    100% { opacity: 1; }
+}
+
+/* Percent Change */
+.adv_changePos { color: #00ff9d; font-weight: bold; }
+.adv_changeNeg { color: #ff5c5c; font-weight: bold; }
+
+/* ===== STATS BOX ===== */
+.adv_statsBox {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.adv_statItem {
+    text-align: center;
+}
+
+.adv_statLabel {
+    color: #999;
+    font-size: 12px;
+    margin: 0;
+}
+
+.adv_statValue {
+    color: #fff;
+    font-size: 15px;
+    margin: 2px 0 0;
+}
+
+/* ===== MINI CHART ===== */
+.adv_miniChart {
+    width: 100%;
+    margin-top: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0,255,200,0.2);
+}
+
+/* Loading shimmer if image not loaded */
+.adv_miniChart.loading {
+    background: linear-gradient(90deg, #1a1b22, #2a2b33, #1a1b22);
+    background-size: 400% 100%;
+    animation: adv_shimmer 1.6s infinite;
+    height: 100px;
+}
+@keyframes adv_shimmer {
+    0% { background-position: 0% 0; }
+    100% { background-position: -135% 0; }
+}
+
+/* ===== TIMER ===== */
+.adv_timerBox {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 12px;
+    text-align: center;
+    color: #fff;
+    font-size: 14px;
+}
+
+/* ===== ADDRESS & COPY ===== */
+.adv_addressBox {
+    margin-top: 15px;
+    padding: 12px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.adv_copyBtn {
+    background: #00c46b;
+    color: white;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    box-shadow: 0 0 10px #00c46b;
+}
+.adv_copyBtn:hover {
+    transform: scale(1.05);
+}
+
+/* ===== BUY / SELL BUTTONS ===== */
+.adv_actionButtons {
+    margin-top: 18px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.adv_btn {
+    width: 48%;
+    padding: 12px;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .25s;
+}
+
+.adv_buyBtn {
+    background: #00ff9d;
+    color: #003b22;
+    box-shadow: 0 0 15px rgba(0,255,157,0.4);
+}
+.adv_buyBtn:hover {
+    background: #00c977;
+}
+
+.adv_sellBtn {
+    background: #ff4d4d;
+    color: white;
+    box-shadow: 0 0 15px rgba(255,77,77,0.4);
+}
+.adv_sellBtn:hover {
+    background: #ff2e2e;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 400px) {
+    .adv_tokenCard {
+        width: 100%;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<div class="adv_globalWrapper">
+    
+    <div class="adv_tokenCard">
+
+        <div class="adv_watermark"></div>
+
+        <!-- HEADER -->
+        <div class="adv_topRow">
+            <img src="logo.jpg" class="adv_tokenLogo">
+            <div>
+                <h2 class="adv_tokenName">TRENCH RACER</h2>
+                <p class="adv_tokenSymbol">$TRC</p>
+            </div>
+
+            <div class="adv_rankBadge">#129</div>
+        </div>
+
+        <!-- PRICE ROW -->
+        <div class="adv_priceRow">
+            <div class="adv_priceValue">$0.0043</div>
+            <div class="adv_changePos">+12.4%</div>
+        </div>
+
+        <!-- STATS -->
+        <div class="adv_statsBox">
+            <div class="adv_statItem">
+                <p class="adv_statLabel">24H Volume</p>
+                <p class="adv_statValue">$182K</p>
+            </div>
+
+            <div class="adv_statItem">
+                <p class="adv_statLabel">Market Cap</p>
+                <p class="adv_statValue">$1.4M</p>
+            </div>
+
+            <div class="adv_statItem">
+                <p class="adv_statLabel">Holders</p>
+                <p class="adv_statValue">9,238</p>
+            </div>
+        </div>
+
+        <!-- MINI CHART -->
+        <img src="chart-mini.png" class="adv_miniChart" id="adv_chartImg" alt="chart">
+
+        <!-- TIMER -->
+        <div class="adv_timerBox">
+            <span>⏳ Since Purchase:</span>
+            <span id="adv_purchaseTimer">00:00:00</span>
+        </div>
+
+        <!-- ADDRESS -->
+        <div class="adv_addressBox">
+            <p id="adv_tokenAddress">7F9ed...A82kF</p>
+            <button class="adv_copyBtn" onclick="advCopyAddress()">COPY</button>
+        </div>
+
+        <!-- BUY / SELL -->
+        <div class="adv_actionButtons">
+            <div class="adv_btn adv_buyBtn">BUY</div>
+            <div class="adv_btn adv_sellBtn">SELL</div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* ===== COPY ADDRESS ===== */
+function advCopyAddress() {
+    const text = document.getElementById("adv_tokenAddress").innerText;
+    navigator.clipboard.writeText(text);
+}
+
+/* ===== MINI CHART SHIMMER LOADING ===== */
+const advChart = document.getElementById("adv_chartImg");
+advChart.classList.add("loading");
+
+advChart.onload = () => {
+    advChart.classList.remove("loading");
+};
+
+/* ===== TIMER (persists even if page reloads) ===== */
+let advStart = localStorage.getItem("adv_purchaseStart");
+if (!advStart) {
+    advStart = Date.now();
+    localStorage.setItem("adv_purchaseStart", advStart);
+}
+
+function adv_updateTimer() {
+    let elapsed = Math.floor((Date.now() - advStart) / 1000);
+
+    const h = String(Math.floor(elapsed / 3600)).padStart(2, "0");
+    const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, "0");
+    const s = String(elapsed % 60).padStart(2, "0");
+
+    document.getElementById("adv_purchaseTimer").innerText = `${h}:${m}:${s}`;
+}
+
+setInterval(adv_updateTimer, 1000);
+adv_updateTimer();
+
+</script>
+
+</body>
+</html>
