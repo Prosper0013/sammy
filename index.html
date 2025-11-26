@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PNL Card</title>
+<title>PNL Card with Background</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -26,6 +26,11 @@
             font-size: 22px;
             text-align: center;
             padding: 40px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
         }
         .pnl-card { display: none; }
     }
@@ -33,19 +38,38 @@
     .pnl-card {
         width: 90%;
         max-width: 950px;
-        background: radial-gradient(circle at top, #1d1d1d, #0d0d0d);
+        background: radial-gradient(circle at top, rgba(29, 29, 29, 0.85), rgba(13, 13, 13, 0.9));
         padding: 25px;
         border-radius: 22px;
         box-shadow: 0 0 25px rgba(0,255,200,0.35);
         border: 1px solid rgba(0,255,200,0.25);
         color: white;
         position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    /* Blurry background image */
+    .pnl-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('logo.jpg');
+        background-size: cover;
+        background-position: center;
+        filter: blur(10px) brightness(0.4);
+        z-index: -1;
     }
 
     .top-row {
         display: flex;
         justify-content: space-between;
         margin-bottom: 20px;
+        position: relative;
+        z-index: 2;
     }
 
     /* Left user info */
@@ -70,6 +94,7 @@
         width: 60px;
         height: 60px;
         border-radius: 10px;
+        border: 1px solid rgba(0,255,200,0.3);
     }
     .bot-name {
         font-size: 22px;
@@ -91,6 +116,8 @@
         justify-content: space-between;
         align-items: center;
         margin-top: 25px;
+        position: relative;
+        z-index: 2;
     }
 
     /* Left QR + referral */
@@ -103,16 +130,20 @@
         height: 100px;
         margin-bottom: 10px;
         border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
     }
     .ref-text {
         font-size: 13px;
         line-height: 16px;
         word-wrap: break-word;
+        background: rgba(0,0,0,0.5);
+        padding: 8px;
+        border-radius: 6px;
     }
 
     /* Rocket image */
     .rocket-sec img {
-        width: 160px;
+        width: 260px;
         height: auto;
         filter: drop-shadow(0 0 10px rgba(100,200,255,0.4));
     }
@@ -120,12 +151,13 @@
     /* PNL BOX */
     .pnl-box {
         width: 40%;
-        background: #111;
+        background: rgba(17, 17, 17, 0.7);
         padding: 18px;
         border-radius: 18px;
         box-shadow: 0 0 20px rgba(0,255,200,0.25);
         border: 1px solid rgba(0,255,200,0.35);
         text-align: left;
+        backdrop-filter: blur(5px);
     }
     .pnl-title {
         font-size: 22px;
@@ -135,14 +167,16 @@
         font-size: 34px;
         color: #00ff7b;
         font-weight: 800;
+        text-shadow: 0 0 10px rgba(0,255,123,0.5);
     }
     .pnl-value.loss {
         font-size: 34px;
         color: #ff3b3b;
         font-weight: 800;
+        text-shadow: 0 0 10px rgba(255,59,59,0.5);
     }
 
-    /* Fixed chart thumbnail */
+    /* Chart thumbnail */
     .chart-thumb {
         margin-top: 15px;
         width: 100%;
@@ -202,16 +236,16 @@
 
         <!-- Left: User Info -->
         <div class="user-left">
-            <div class="username">@UsernameHere</div>
-            <div class="balance">Balance: 12,500 TOKEN</div>
+            <div class="username">@CryptoTrader</div>
+            <div class="balance">Balance: 12,500 ALG</div>
         </div>
 
         <!-- Right: Logo + Bot Name + Token info -->
         <div class="logo-area">
-            <img src="https://via.placeholder.com/60" alt="">
+            <img src="logo.jpg" alt="">
             <div class="bot-name">ALGORN</div>
-            <div class="token-name">Token Name Here</div>
-            <div class="token-ticker">TICKER</div>
+            <div class="token-name">Algorand</div>
+            <div class="token-ticker">ALG</div>
         </div>
     </div>
 
@@ -220,16 +254,16 @@
 
         <!-- LEFT REFERRAL ADDRESS + QR -->
         <div class="ref-sec">
-            <img src="https://via.placeholder.com/100" alt="QR Code">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://t.me/algornbot?start=CRYPTO123" alt="QR Code">
             <div class="ref-text">
                 Referral:<br>
-                https://t.me/yourbot?start=USERCODE
+                https://t.me/algornbot?start=CRYPTO123
             </div>
         </div>
 
         <!-- ROCKET IMAGE -->
         <div class="rocket-sec">
-            <img src="https://via.placeholder.com/160x100" alt="">
+            <img src="rocket.png" alt="">
         </div>
 
         <!-- PNL BOX -->
