@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Advanced Token Card</title>
+<title>PnL Report</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="PnL Report - Multi-Chain Trader Bot">
+<meta property="og:description" content="Check out my cryptocurrency profit and loss report">
+<meta property="og:image" content="https://raw.githubusercontent.com/Prosper0013/sammy/refs/heads/main/logo.jpg">
+<meta property="og:url" content="YOUR_VERCEL_URL">
 
 <style>
 /* ROOT VARIABLES */
@@ -103,47 +107,6 @@
     color: #fff;
 }
 
-/* MINI CHART */
-.adv_miniChart {
-    width: 100%;
-    margin-top: 22px;
-    border-radius: 12px;
-    box-shadow: 0 0 12px rgba(0,255,180,0.25);
-}
-
-/* TIMER */
-.adv_timerBox {
-    margin-top: 20px;
-    padding: 12px;
-    background: rgba(255,255,255,0.06);
-    text-align: center;
-    border-radius: 15px;
-    color: #fff;
-    font-size: 14px;
-}
-
-/* ADDRESS + COPY */
-.adv_addressBox {
-    margin-top: 18px;
-    padding: 12px;
-    background: rgba(255,255,255,0.07);
-    border-radius: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.adv_copyBtn {
-    background: var(--adv-green);
-    color: white;
-    padding: 7px 14px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    box-shadow: 0 0 10px var(--adv-green);
-}
-
 /* PnL DISPLAY */
 .adv_pnlBox {
     margin-top: 20px;
@@ -161,9 +124,29 @@
 .profitColor { color: var(--adv-green); }
 .lossColor { color: var(--adv-red); }
 
+/* NETWORK BADGE */
+.adv_networkBadge {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 8px;
+}
+
 /* RESPONSIVE */
 @media (max-width: 450px) {
     .adv_tokenCard { width: 92%; }
+}
+
+/* BOT BRANDING */
+.adv_botBrand {
+    text-align: center;
+    margin-top: 15px;
+    color: #666;
+    font-size: 12px;
 }
 </style>
 </head>
@@ -180,105 +163,115 @@
 
     <!-- Top section -->
     <div class="adv_topRow">
-        <img src="token-logo.png" class="adv_tokenLogo">
+        <img id="adv_tokenLogo" src="https://raw.githubusercontent.com/Prosper0013/sammy/refs/heads/main/logo.jpg" class="adv_tokenLogo">
         <div>
-            <h2 class="adv_tokenName">TRENCH RACER</h2>
-            <p class="adv_tokenSymbol">$TRC</p>
+            <h2 class="adv_tokenName" id="adv_tokenName">Loading...</h2>
+            <p class="adv_tokenSymbol" id="adv_tokenSymbol">$---</p>
+            <div class="adv_networkBadge" id="adv_network">SOLANA</div>
         </div>
     </div>
 
     <!-- Stats -->
     <div class="adv_statsBox">
         <div class="adv_statItem">
-            <p class="adv_statLabel">Price</p>
-            <p class="adv_statValue" id="adv_price">$0.0043</p>
+            <p class="adv_statLabel">Current Price</p>
+            <p class="adv_statValue" id="adv_price">$---</p>
         </div>
         <div class="adv_statItem">
-            <p class="adv_statLabel">24H Vol</p>
-            <p class="adv_statValue">$182K</p>
+            <p class="adv_statLabel">Your Balance</p>
+            <p class="adv_statValue" id="adv_balance">---</p>
         </div>
         <div class="adv_statItem">
-            <p class="adv_statLabel">M.Cap</p>
-            <p class="adv_statValue">$1.4M</p>
+            <p class="adv_statLabel">Current Value</p>
+            <p class="adv_statValue" id="adv_value">$---</p>
         </div>
-    </div>
-
-    <!-- Mini chart -->
-    <img src="chart-mini.png" class="adv_miniChart">
-
-    <!-- Timer -->
-    <div class="adv_timerBox">
-        <span>⏳ Since Purchase: </span>
-        <span id="adv_purchaseTimer">00:00:00</span>
     </div>
 
     <!-- PnL Box -->
     <div class="adv_pnlBox">
         <div style="color:#ccc; font-size:14px;">Your PnL:</div>
-        <div id="adv_pnlValue" class="adv_pnlValue profitColor">+23.5%</div>
+        <div id="adv_pnlValue" class="adv_pnlValue profitColor">+0.0%</div>
+        <div style="color:#ccc; font-size:12px; margin-top: 5px;" id="adv_pnlAmount">$0.00</div>
     </div>
 
-    <!-- Address copy -->
-    <div class="adv_addressBox">
-        <p id="adv_tokenAddress">7F9edA8....92kFF</p>
-        <button class="adv_copyBtn" onclick="advCopyAddress()">COPY</button>
+    <!-- Additional Info -->
+    <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #999;">Avg Buy Price:</span>
+            <span style="color: #fff;" id="adv_avgPrice">$---</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <span style="color: #999;">Total Invested:</span>
+            <span style="color: #fff;" id="adv_invested">$---</span>
+        </div>
+    </div>
+
+    <!-- Address -->
+    <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.07); border-radius: 10px; text-align: center;">
+        <p style="color: #ccc; font-size: 11px; margin: 0;" id="adv_tokenAddress">Contract: Loading...</p>
+    </div>
+
+    <!-- Bot Branding -->
+    <div class="adv_botBrand">
+        Generated by Multi-Chain Trader Bot
     </div>
 
 </div>
 
-
-
-
 <script>
-/* ----------------- COPY ------------------ */
-function advCopyAddress() {
-    const text = document.getElementById("adv_tokenAddress").innerText;
-    navigator.clipboard.writeText(text);
+// Get URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+
+// Extract data from URL parameters
+const tokenName = urlParams.get('name') || 'Unknown Token';
+const tokenSymbol = urlParams.get('symbol') || 'UNKNOWN';
+const network = urlParams.get('network') || 'SOLANA';
+const currentPrice = parseFloat(urlParams.get('price')) || 0;
+const balance = parseFloat(urlParams.get('balance')) || 0;
+const pnlPercent = parseFloat(urlParams.get('pnl_percent')) || 0;
+const pnlAmount = parseFloat(urlParams.get('pnl_amount')) || 0;
+const currentValue = parseFloat(urlParams.get('current_value')) || 0;
+const avgPrice = parseFloat(urlParams.get('avg_price')) || 0;
+const totalInvested = parseFloat(urlParams.get('invested')) || 0;
+const tokenAddress = urlParams.get('address') || '';
+const tokenLogo = urlParams.get('logo') || 'https://raw.githubusercontent.com/Prosper0013/sammy/refs/heads/main/logo.jpg';
+
+// Update DOM with data
+document.getElementById('adv_tokenName').textContent = tokenName;
+document.getElementById('adv_tokenSymbol').textContent = `$${tokenSymbol}`;
+document.getElementById('adv_network').textContent = network.toUpperCase();
+document.getElementById('adv_price').textContent = `$${currentPrice.toFixed(6)}`;
+document.getElementById('adv_balance').textContent = balance.toFixed(6);
+document.getElementById('adv_value').textContent = `$${currentValue.toFixed(2)}`;
+document.getElementById('adv_avgPrice').textContent = `$${avgPrice.toFixed(6)}`;
+document.getElementById('adv_invested').textContent = `$${totalInvested.toFixed(2)}`;
+document.getElementById('adv_tokenAddress').textContent = `Contract: ${tokenAddress.substring(0, 8)}...${tokenAddress.substring(tokenAddress.length - 6)}`;
+document.getElementById('adv_tokenLogo').src = tokenLogo;
+
+// Update PnL display
+const pnlDisplay = document.getElementById("adv_pnlValue");
+const pnlAmountDisplay = document.getElementById("adv_pnlAmount");
+const badge = document.getElementById("adv_statusBadge");
+
+pnlDisplay.textContent = (pnlPercent >= 0 ? "+" : "") + pnlPercent.toFixed(2) + "%";
+pnlAmountDisplay.textContent = (pnlAmount >= 0 ? "+" : "") + "$" + Math.abs(pnlAmount).toFixed(2);
+
+if (pnlPercent >= 0) {
+    pnlDisplay.classList.remove("lossColor");
+    pnlDisplay.classList.add("profitColor");
+    badge.classList.remove("adv_loss");
+    badge.classList.add("adv_profit");
+    badge.textContent = "PROFIT";
+} else {
+    pnlDisplay.classList.remove("profitColor");
+    pnlDisplay.classList.add("lossColor");
+    badge.classList.remove("adv_profit");
+    badge.classList.add("adv_loss");
+    badge.textContent = "LOSS";
 }
 
-/* ----------------- TIMER ------------------ */
-let advSeconds = 0;
-setInterval(() => {
-    advSeconds++;
-    const h = String(Math.floor(advSeconds / 3600)).padStart(2, "0");
-    const m = String(Math.floor((advSeconds % 3600) / 60)).padStart(2, "0");
-    const s = String(advSeconds % 60).padStart(2, "0");
-    document.getElementById("adv_purchaseTimer").innerText = `${h}:${m}:${s}`;
-}, 1000);
-
-
-/* ----------------- DYNAMIC PROFIT/LOSS LOGIC ------------------
-   You will feed the PnL value here from your Python API:
-   Example: updatePnL( -12.4 )   // shows LOSS
-            updatePnL(  8.2 )    // shows PROFIT
----------------------------------------------------------------- */
-function updatePnL(pnlPercent) {
-    const pnlDisplay = document.getElementById("adv_pnlValue");
-    const badge = document.getElementById("adv_statusBadge");
-
-    // Update text
-    pnlDisplay.innerHTML = (pnlPercent >= 0 ? "+" : "") + pnlPercent.toFixed(2) + "%";
-
-    // Apply styles
-    if (pnlPercent >= 0) {
-        pnlDisplay.classList.remove("lossColor");
-        pnlDisplay.classList.add("profitColor");
-
-        badge.classList.remove("adv_loss");
-        badge.classList.add("adv_profit");
-        badge.innerHTML = "PROFIT";
-    } else {
-        pnlDisplay.classList.remove("profitColor");
-        pnlDisplay.classList.add("lossColor");
-
-        badge.classList.remove("adv_profit");
-        badge.classList.add("adv_loss");
-        badge.innerHTML = "LOSS";
-    }
-}
-
-/* EXAMPLE PREVIEW (delete this after linking your Python backend) */
-setTimeout(() => updatePnL(-14.7), 5000);
+// Update page title and meta tags
+document.title = `PnL - ${tokenSymbol} - ${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%`;
 </script>
 
 </body>
