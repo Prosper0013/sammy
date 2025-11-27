@@ -1,89 +1,89 @@
-// api/generate-pnl-card.js
-export default async function handler(request, response) {
+// api/generate-pnl-card-node.js
+const { createCanvas, loadImage, registerFont } = require('canvas');
+const path = require('path');
+
+module.exports = async (req, res) => {
   try {
-    const { searchParams } = new URL(request.url);
-    
-    // Get parameters
-    const username = searchParams.get('username') || '@CryptoTrader';
-    const balance = searchParams.get('balance') || '12,500 ALG';
-    const tokenName = searchParams.get('tokenName') || 'Algorand';
-    const tokenTicker = searchParams.get('tokenTicker') || 'ALG';
-    const pnlValue = searchParams.get('pnlValue') || '+45.3%';
-    const pnlType = searchParams.get('pnlType') || 'profit';
+    const {
+      username = '@CryptoTrader',
+      balance = '12,500 ALG',
+      tokenName = 'Algorand',
+      tokenTicker = 'ALG',
+      pnlValue = '+45.3%',
+      pnlType = 'profit'
+    } = req.query;
 
-    // Simple HTML response for testing first
-    const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>PNL Card</title>
-        <style>
-            body {
-                margin: 0;
-                padding: 40px;
-                background: #0d0d0d;
-                color: white;
-                font-family: Arial, sans-serif;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-            }
-            .card {
-                background: rgba(29, 29, 29, 0.9);
-                padding: 30px;
-                border-radius: 20px;
-                border: 2px solid #00ffc8;
-                box-shadow: 0 0 20px rgba(0,255,200,0.3);
-                text-align: center;
-                max-width: 500px;
-            }
-            .username {
-                font-size: 24px;
-                margin-bottom: 10px;
-            }
-            .balance {
-                color: #00ffc8;
-                margin-bottom: 20px;
-            }
-            .pnl {
-                font-size: 32px;
-                font-weight: bold;
-                color: ${pnlType === 'profit' ? '#00ff7b' : '#ff3b3b'};
-                margin: 20px 0;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="card">
-            <div class="username">${username}</div>
-            <div class="balance">Balance: ${balance}</div>
-            <div class="token">${tokenName} (${tokenTicker})</div>
-            <div class="pnl">${pnlValue}</div>
-            <div>PNL Card Generated Successfully! 🚀</div>
-        </div>
-    </body>
-    </html>
-    `;
+    // Set response headers
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 's-maxage=3600'); // Cache for 1 hour
 
-    return new Response(html, {
-      headers: {
-        'Content-Type': 'text/html',
-      },
-    });
-    
+    // Create canvas
+    const width = 1200;
+    const height = 630;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Draw background
+    ctx.fillStyle = '#0d0d0d';
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw card background
+    const cardWidth = 1000;
+    const cardHeight = 500;
+    const cardX = (width - cardWidth) / 2;
+    const cardY = (height - cardHeight) / 2;
+
+    // Card gradient
+    const gradient = ctx.createRadialGradient(
+      cardX + cardWidth / 2, cardY, 0,
+      cardX + cardWidth / 2, cardY, cardWidth / 2
+    );
+    gradient.addColorStop(0, 'rgba(29, 29, 29, 0.9)');
+    gradient.addColorStop(1, 'rgba(13, 13, 13, 0.9)');
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(cardX, cardY, cardWidth, cardHeight);
+
+    // Card border
+    ctx.strokeStyle = 'rgba(0, 255, 200, 0.3)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(cardX, cardY, cardWidth, cardHeight);
+
+    // Add glow effect
+    ctx.shadowColor = 'rgba(0, 255, 200, 0.5)';
+    ctx.shadowBlur = 20;
+    ctx.strokeRect(cardX, cardY, cardWidth, cardHeight);
+    ctx.shadowBlur = 0;
+
+    // Draw text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 40px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(username, width / 2, cardY + 80);
+
+    ctx.fillStyle = '#00ffc8';
+    ctx.font = '30px Arial';
+    ctx.fillText(`Balance: ${balance}`, width / 2, cardY + 130);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '25px Arial';
+    ctx.fillText(`${tokenName} (${tokenTicker})`, width / 2, cardY + 180);
+
+    // PnL value
+    ctx.fillStyle = pnlType === 'profit' ? '#00ff7b' : '#ff3b3b';
+    ctx.font = 'bold 60px Arial';
+    ctx.fillText(pnlValue, width / 2, cardY + 280);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '30px Arial';
+    ctx.fillText('PNL Card', width / 2, cardY + 350);
+
+    // Convert to buffer and send
+    const buffer = canvas.toBuffer('image/png');
+    res.end(buffer);
+
   } catch (error) {
-    console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    console.error('Error generating PnL card:', error);
+    res.status(500).json({ error: error.message });
   }
-}
-
-export const config = {
-  runtime: 'edge',
 };
