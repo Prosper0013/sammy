@@ -546,7 +546,7 @@ function getUrlParams() {
 // Apply parameters to the page
 function applyUrlParams() {
     const params = getUrlParams();
-    console.log('URL Parameters:', params); // Debug log
+    console.log('URL Parameters:', params);
 
     // Update username
     const usernameElement = document.getElementById('username');
@@ -563,7 +563,7 @@ function applyUrlParams() {
     const tokenTickerElement = document.getElementById('tokenTicker');
     if (tokenTickerElement) tokenTickerElement.textContent = params.tokenTicker;
 
-    // Update PnL value and styling (DO NOT use decodeURIComponent here)
+    // Update PnL value and styling
     const pnlValueElement = document.getElementById('pnlValue');
     if (pnlValueElement) {
         pnlValueElement.textContent = params.pnlValue;
@@ -581,7 +581,6 @@ function applyUrlParams() {
     // Update referral link and QR code
     const referralLinkElement = document.getElementById('referralLink');
     if (referralLinkElement) {
-        // escape HTML to avoid accidental injection
         referralLinkElement.innerHTML = 'Referral:<br>' + escapeHtml(params.referralLink);
     }
 
@@ -591,18 +590,27 @@ function applyUrlParams() {
         qrCodeElement.setAttribute('crossorigin', 'anonymous');
     }
 
-    // Update form inputs
-    document.getElementById('usernameInput').value = params.username;
-    document.getElementById('balanceInput').value = params.balance;
-    document.getElementById('tokenNameInput').value = params.tokenName;
-    document.getElementById('tokenTickerInput').value = params.tokenTicker;
-    document.getElementById('pnlValueInput').value = params.pnlValue;
-    document.getElementById('pnlTypeSelect').value = params.pnlType;
-    document.getElementById('referralLinkInput').value = params.referralLink;
+    // Update form inputs if they exist
+    const usernameInput = document.getElementById('usernameInput');
+    const balanceInput = document.getElementById('balanceInput');
+    const tokenNameInput = document.getElementById('tokenNameInput');
+    const tokenTickerInput = document.getElementById('tokenTickerInput');
+    const pnlValueInput = document.getElementById('pnlValueInput');
+    const pnlTypeSelect = document.getElementById('pnlTypeSelect');
+    const referralLinkInput = document.getElementById('referralLinkInput');
+
+    if (usernameInput) usernameInput.value = params.username;
+    if (balanceInput) balanceInput.value = params.balance;
+    if (tokenNameInput) tokenNameInput.value = params.tokenName;
+    if (tokenTickerInput) tokenTickerInput.value = params.tokenTicker;
+    if (pnlValueInput) pnlValueInput.value = params.pnlValue;
+    if (pnlTypeSelect) pnlTypeSelect.value = params.pnlType;
+    if (referralLinkInput) referralLinkInput.value = params.referralLink;
 }
 
 // small helper to escape HTML in referral text
 function escapeHtml(unsafe) {
+    if (!unsafe) return '';
     return unsafe.replace(/[&<"']/g, function(m) {
         return {'&':'&amp;','<':'&lt;','"':'&quot;',"'":'&#039;'}[m];
     });
@@ -610,17 +618,31 @@ function escapeHtml(unsafe) {
 
 // Preload <img> tags and CSS background-image used in .pnl-card::before
 function preloadAllImages() {
-    const images = Array.from(document.images).map(img => img.src).filter(Boolean);
+    const images = Array.from(document.images).map(img => {
+        if (img.src.includes('qrCode')) {
+            img.setAttribute('crossorigin', 'anonymous');
+        }
+        return img.src;
+    }).filter(Boolean);
 
     // attempt to read .pnl-card::before background-image
     try {
         const pnl = document.querySelector('.pnl-card');
-        const styleBefore = getComputedStyle(pnl, '::before').getPropertyValue('background-image');
-        // styleBefore looks like: url("...") or none
-        const urlMatch = styleBefore.match(/url\((?:'|")?(.*?)(?:'|")?\)/);
-        if (urlMatch && urlMatch[1]) images.push(urlMatch[1]);
+        if (pnl) {
+            const styleBefore = getComputedStyle(pnl, '::before').getPropertyValue('background-image');
+            const urlMatch = styleBefore.match(/url\((?:'|")?(.*?)(?:'|")?\)/);
+            if (urlMatch && urlMatch[1]) {
+                const bgUrl = urlMatch[1];
+                images.push(bgUrl);
+                
+                // Preload the background image separately
+                const bgImg = new Image();
+                bgImg.crossOrigin = 'anonymous';
+                bgImg.src = bgUrl;
+            }
+        }
     } catch (e) {
-        // ignore
+        console.warn('Could not preload background image:', e);
     }
 
     // dedupe
@@ -629,11 +651,20 @@ function preloadAllImages() {
     return Promise.all(unique.map(src => new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.onload = () => resolve({src, ok: true});
-        img.onerror = () => resolve({src, ok: false});
+        img.onload = () => {
+            console.log('Successfully loaded:', src);
+            resolve({src, ok: true});
+        };
+        img.onerror = () => {
+            console.warn('Failed to load:', src);
+            resolve({src, ok: false});
+        };
         img.src = src;
         // also add timeout fallback
-        setTimeout(() => resolve({src, ok: false}), 4000);
+        setTimeout(() => {
+            console.warn('Timeout loading:', src);
+            resolve({src, ok: false});
+        }, 5000);
     })));
 }
 
@@ -646,6 +677,14 @@ function downloadCard() {
         script.onload = function() {
             captureAndDownload();
         };
+        script.onerror = function() {
+            showNotification('Error: Failed to load html2canvas library', true);
+            const downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                downloadBtn.textContent = '📥 Download Card';
+                downloadBtn.disabled = false;
+            }
+        };
         document.head.appendChild(script);
     } else {
         captureAndDownload();
@@ -654,42 +693,130 @@ function downloadCard() {
 
 function captureAndDownload() {
     const cardElement = document.getElementById('pnlCard');
+    if (!cardElement) {
+        showNotification('Error: Card element not found', true);
+        return;
+    }
+    
+    // Show loading state
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        const originalText = downloadBtn.textContent;
+        downloadBtn.textContent = '⏳ Capturing...';
+        downloadBtn.disabled = true;
 
-    // html2canvas options: useCORS true and allowTaint false to avoid tainted canvases
-    html2canvas(cardElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#0d0d0d',
-        logging: false,
-        // try foreignObjectRendering as fallback
-        foreignObjectRendering: true
-    }).then(canvas => {
-        const image = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = `pnl-card-${Date.now()}.png`;
-        link.href = image;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        showNotification('Card downloaded successfully!');
-    }).catch(error => {
-        console.error('Error capturing card:', error);
-        showNotification('Error: could not capture the card. Try hosting images with CORS enabled.', true);
-    });
+        // Restore button after timeout (safety net)
+        setTimeout(() => {
+            downloadBtn.textContent = originalText;
+            downloadBtn.disabled = false;
+        }, 10000);
+    }
+
+    // Force reflow and ensure all images are loaded
+    cardElement.offsetHeight;
+
+    // Wait a bit more for any dynamic content to render
+    setTimeout(() => {
+        const options = {
+            scale: 2,
+            useCORS: true,
+            allowTaint: false,
+            backgroundColor: null,
+            logging: false,
+            onclone: function(clonedDoc) {
+                // This function runs on the cloned document before capturing
+                const clonedCard = clonedDoc.getElementById('pnlCard');
+                if (clonedCard) {
+                    // Ensure all styles are preserved
+                    clonedCard.style.visibility = 'visible';
+                    clonedCard.style.opacity = '1';
+                }
+            }
+        };
+
+        // Use Promise-based html2canvas call
+        const capturePromise = html2canvas(cardElement, options);
+        
+        if (capturePromise && typeof capturePromise.then === 'function') {
+            capturePromise.then(canvas => {
+                // Restore button state
+                if (downloadBtn) {
+                    downloadBtn.textContent = '📥 Download Card';
+                    downloadBtn.disabled = false;
+                }
+                
+                // Check if canvas has content
+                const ctx = canvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                let isEmpty = true;
+                
+                // Check if canvas has any non-transparent pixels
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i + 3] !== 0) {
+                        isEmpty = false;
+                        break;
+                    }
+                }
+                
+                if (isEmpty) {
+                    showNotification('Error: Captured image is empty', true);
+                    return;
+                }
+                
+                const image = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `pnl-card-${Date.now()}.png`;
+                link.href = image;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showNotification('Card downloaded successfully!');
+            }).catch(error => {
+                console.error('Error capturing card:', error);
+                // Restore button state
+                if (downloadBtn) {
+                    downloadBtn.textContent = '📥 Download Card';
+                    downloadBtn.disabled = false;
+                }
+                showNotification('Error: Could not capture the card', true);
+            });
+        } else {
+            // Fallback if html2canvas doesn't return a promise
+            if (downloadBtn) {
+                downloadBtn.textContent = '📥 Download Card';
+                downloadBtn.disabled = false;
+            }
+            showNotification('Error: Capture library not working properly', true);
+        }
+    }, 500);
 }
 
 // Share function to generate shareable URL
 function shareCard() {
+    const usernameInput = document.getElementById('usernameInput');
+    const balanceInput = document.getElementById('balanceInput');
+    const tokenNameInput = document.getElementById('tokenNameInput');
+    const tokenTickerInput = document.getElementById('tokenTickerInput');
+    const pnlValueInput = document.getElementById('pnlValueInput');
+    const pnlTypeSelect = document.getElementById('pnlTypeSelect');
+    const referralLinkInput = document.getElementById('referralLinkInput');
+
+    if (!usernameInput || !balanceInput || !tokenNameInput || !tokenTickerInput || 
+        !pnlValueInput || !pnlTypeSelect || !referralLinkInput) {
+        showNotification('Error: Form inputs not found', true);
+        return;
+    }
+
     const params = new URLSearchParams();
     
-    params.set('username', document.getElementById('usernameInput').value);
-    params.set('balance', document.getElementById('balanceInput').value);
-    params.set('tokenName', document.getElementById('tokenNameInput').value);
-    params.set('tokenTicker', document.getElementById('tokenTickerInput').value);
-    params.set('pnlValue', document.getElementById('pnlValueInput').value);
-    params.set('pnlType', document.getElementById('pnlTypeSelect').value);
-    params.set('referralLink', document.getElementById('referralLinkInput').value);
+    params.set('username', usernameInput.value);
+    params.set('balance', balanceInput.value);
+    params.set('tokenName', tokenNameInput.value);
+    params.set('tokenTicker', tokenTickerInput.value);
+    params.set('pnlValue', pnlValueInput.value);
+    params.set('pnlType', pnlTypeSelect.value);
+    params.set('referralLink', referralLinkInput.value);
     
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     
@@ -697,24 +824,38 @@ function shareCard() {
     applyUrlParams();
     
     // Copy to clipboard
-    navigator.clipboard.writeText(shareUrl).then(() => {
-        showNotification('Shareable URL copied to clipboard!');
-    }).catch(() => {
-        // Fallback if clipboard API is not available
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            showNotification('Shareable URL copied to clipboard!');
+        }).catch(() => {
+            // Fallback if clipboard API fails
+            prompt('Copy this URL to share:', shareUrl);
+            showNotification('Shareable URL generated!');
+        });
+    } else {
+        // Fallback for browsers without clipboard API
         prompt('Copy this URL to share:', shareUrl);
         showNotification('Shareable URL generated!');
-    });
+    }
 }
 
 // Reset form and card to default values
 function resetCard() {
-    document.getElementById('usernameInput').value = '@CryptoTrader';
-    document.getElementById('balanceInput').value = '12,500 ALG';
-    document.getElementById('tokenNameInput').value = 'Algorand';
-    document.getElementById('tokenTickerInput').value = 'ALG';
-    document.getElementById('pnlValueInput').value = '+45.3%';
-    document.getElementById('pnlTypeSelect').value = 'profit';
-    document.getElementById('referralLinkInput').value = 'https://t.me/algornbot?start=CRYPTO123';
+    const usernameInput = document.getElementById('usernameInput');
+    const balanceInput = document.getElementById('balanceInput');
+    const tokenNameInput = document.getElementById('tokenNameInput');
+    const tokenTickerInput = document.getElementById('tokenTickerInput');
+    const pnlValueInput = document.getElementById('pnlValueInput');
+    const pnlTypeSelect = document.getElementById('pnlTypeSelect');
+    const referralLinkInput = document.getElementById('referralLinkInput');
+
+    if (usernameInput) usernameInput.value = '@CryptoTrader';
+    if (balanceInput) balanceInput.value = '12,500 ALG';
+    if (tokenNameInput) tokenNameInput.value = 'Algorand';
+    if (tokenTickerInput) tokenTickerInput.value = 'ALG';
+    if (pnlValueInput) pnlValueInput.value = '+45.3%';
+    if (pnlTypeSelect) pnlTypeSelect.value = 'profit';
+    if (referralLinkInput) referralLinkInput.value = 'https://t.me/algornbot?start=CRYPTO123';
     
     applyUrlParams();
     showNotification('Card reset to default values!');
@@ -723,6 +864,8 @@ function resetCard() {
 // Show notification
 function showNotification(message, isError = false) {
     const notification = document.getElementById('notification');
+    if (!notification) return;
+    
     notification.textContent = message;
     notification.style.background = isError ? '#ff3b3b' : '#00ffc8';
     notification.style.color = isError ? 'white' : '#0d0d0d';
@@ -747,69 +890,116 @@ function setupFormListeners() {
     ];
     
     inputs.forEach(id => {
-        document.getElementById(id).addEventListener('input', applyFormValues);
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', applyFormValues);
+        }
     });
 }
 
 // Apply form values to card
 function applyFormValues() {
-    document.getElementById('username').textContent = document.getElementById('usernameInput').value;
-    document.getElementById('balance').textContent = `Balance: ${document.getElementById('balanceInput').value}`;
-    document.getElementById('tokenName').textContent = document.getElementById('tokenNameInput').value;
-    document.getElementById('tokenTicker').textContent = document.getElementById('tokenTickerInput').value;
-    
+    const usernameInput = document.getElementById('usernameInput');
+    const balanceInput = document.getElementById('balanceInput');
+    const tokenNameInput = document.getElementById('tokenNameInput');
+    const tokenTickerInput = document.getElementById('tokenTickerInput');
+    const pnlValueInput = document.getElementById('pnlValueInput');
+    const pnlTypeSelect = document.getElementById('pnlTypeSelect');
+    const referralLinkInput = document.getElementById('referralLinkInput');
+
+    if (!usernameInput || !balanceInput || !tokenNameInput || !tokenTickerInput || 
+        !pnlValueInput || !pnlTypeSelect || !referralLinkInput) {
+        return;
+    }
+
+    const usernameElement = document.getElementById('username');
+    const balanceElement = document.getElementById('balance');
+    const tokenNameElement = document.getElementById('tokenName');
+    const tokenTickerElement = document.getElementById('tokenTicker');
     const pnlValueElement = document.getElementById('pnlValue');
-    pnlValueElement.textContent = document.getElementById('pnlValueInput').value;
-    pnlValueElement.classList.remove('profit', 'loss');
-    pnlValueElement.classList.add(document.getElementById('pnlTypeSelect').value === 'loss' ? 'loss' : 'profit');
-    
     const chartLineElement = document.getElementById('chartLine');
-    chartLineElement.classList.remove('loss');
-    if (document.getElementById('pnlTypeSelect').value === 'loss') {
-        chartLineElement.classList.add('loss');
+    const referralLinkElement = document.getElementById('referralLink');
+    const qrCodeElement = document.getElementById('qrCode');
+
+    if (usernameElement) usernameElement.textContent = usernameInput.value;
+    if (balanceElement) balanceElement.textContent = `Balance: ${balanceInput.value}`;
+    if (tokenNameElement) tokenNameElement.textContent = tokenNameInput.value;
+    if (tokenTickerElement) tokenTickerElement.textContent = tokenTickerInput.value;
+    
+    if (pnlValueElement) {
+        pnlValueElement.textContent = pnlValueInput.value;
+        pnlValueElement.classList.remove('profit', 'loss');
+        pnlValueElement.classList.add(pnlTypeSelect.value === 'loss' ? 'loss' : 'profit');
     }
     
-    const referralLink = document.getElementById('referralLinkInput').value;
-    document.getElementById('referralLink').innerHTML = 'Referral:<br>' + escapeHtml(referralLink);
+    if (chartLineElement) {
+        chartLineElement.classList.remove('loss');
+        if (pnlTypeSelect.value === 'loss') {
+            chartLineElement.classList.add('loss');
+        }
+    }
     
-    const qrCodeElement = document.getElementById('qrCode');
-    qrCodeElement.src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(referralLink);
+    const referralLink = referralLinkInput.value;
+    if (referralLinkElement) {
+        referralLinkElement.innerHTML = 'Referral:<br>' + escapeHtml(referralLink);
+    }
+    
+    if (qrCodeElement) {
+        qrCodeElement.src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(referralLink);
+    }
 }
 
 // Wait for everything to load (images/backgrounds), then enable download
 async function init() {
-    applyUrlParams();
-    setupFormListeners();
+    try {
+        applyUrlParams();
+        setupFormListeners();
 
-    // wait for DOM images to be added/updated (small delay)
-    await new Promise(r => setTimeout(r, 100));
+        // Wait for DOM images to be added/updated
+        await new Promise(r => setTimeout(r, 100));
 
-    // preload images and css background
-    const results = await preloadAllImages();
-    console.log('Preload results:', results);
+        // Preload images and css background
+        const results = await preloadAllImages();
+        console.log('Preload results:', results);
 
-    // enable download button
-    const downloadBtn = document.getElementById('downloadBtn');
-    downloadBtn.disabled = false;
-    downloadBtn.addEventListener('click', () => {
-        // capture after a short delay to ensure any final paints complete
-        setTimeout(downloadCard, 150);
-    });
+        // Enable download button
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn) {
+            downloadBtn.disabled = false;
+            downloadBtn.addEventListener('click', () => {
+                setTimeout(downloadCard, 150);
+            });
+        }
 
-    // Setup share button
-    document.getElementById('shareBtn').addEventListener('click', shareCard);
-    
-    // Setup reset button
-    document.getElementById('resetBtn').addEventListener('click', resetCard);
+        // Setup share button
+        const shareBtn = document.getElementById('shareBtn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', shareCard);
+        }
+        
+        // Setup reset button
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', resetCard);
+        }
+
+        console.log('PNL Card Generator initialized successfully');
+    } catch (error) {
+        console.error('Initialization error:', error);
+        // At least apply params even if preload fails
+        applyUrlParams();
+    }
 }
 
 // Auto-apply parameters when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded, applying URL parameters...');
-    init().catch(e => {
-        console.error('Init error:', e);
-        applyUrlParams(); // at least apply params even if preload fails
-    });
+    console.log('Page loaded, initializing PNL Card Generator...');
+    init();
+});
+
+// Global error handler
+window.addEventListener('error', function(e) {
+    console.error('Global error:', e.error);
 });
 </script>
 
