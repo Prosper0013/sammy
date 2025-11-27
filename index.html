@@ -4,21 +4,39 @@
 <meta charset="UTF-8">
 <title>PNL Card Generator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="referrer" content="no-referrer" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
+    :root {
+        --primary-color: #00ffc8;
+        --profit-color: #00ff7b;
+        --loss-color: #ff3b3b;
+        --bg-dark: #0d0d0d;
+        --card-bg: radial-gradient(circle at top, rgba(29, 29, 29, 0.85), rgba(13, 13, 13, 0.9));
+        --text-light: #ffffff;
+        --text-muted: rgba(255, 255, 255, 0.7);
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
     body {
         margin: 0;
         padding: 0;
         font-family: "Poppins", sans-serif;
-        background: #0d0d0d;
+        background: var(--bg-dark);
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        overflow: hidden;
+        min-height: 100vh;
+        overflow: auto;
+        padding: 20px;
     }
 
+    /* -------- LANDSCAPE ONLY -------- */
     @media screen and (orientation: portrait) {
         body::before {
             content: "Rotate your phone → Landscape mode required";
@@ -26,18 +44,76 @@
             font-size: 22px;
             text-align: center;
             padding: 40px;
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            width: 80%;
+            max-width: 400px;
         }
-        .pnl-card { display: none; }
+        .pnl-card, .controls-panel { 
+            display: none !important; 
+        }
+    }
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 1200px;
+        gap: 20px;
+    }
+
+    .controls-panel {
+        width: 90%;
+        max-width: 950px;
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0,255,200,0.2);
+        border: 1px solid rgba(0,255,200,0.15);
+        color: white;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .control-group label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .control-group input, .control-group select {
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.4);
+        color: white;
+        font-family: "Poppins", sans-serif;
+        font-size: 14px;
+    }
+
+    .control-group input:focus, .control-group select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px rgba(0,255,200,0.3);
     }
 
     .pnl-card {
         width: 90%;
         max-width: 950px;
-        background: radial-gradient(circle at top, rgba(29,29,29,0.85), rgba(13,13,13,0.9));
+        background: var(--card-bg);
         padding: 25px;
         border-radius: 22px;
         box-shadow: 0 0 25px rgba(0,255,200,0.35);
@@ -45,12 +121,23 @@
         color: white;
         position: relative;
         overflow: hidden;
+        z-index: 1;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
+    .pnl-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,255,200,0.4);
+    }
+
+    /* Blurry background image (kept as pseudo-element but will be preloaded in JS) */
     .pnl-card::before {
         content: '';
         position: absolute;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         background-image: url('logo.jpg');
         background-size: cover;
         background-position: center;
@@ -62,193 +149,666 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 20px;
-        z-index: 2;
         position: relative;
+        z-index: 2;
     }
 
-    .username { font-size: 20px; font-weight: 600; }
-    .balance { font-size: 16px; color: #00ffc8; margin-top: 3px; }
+    .user-left {
+        text-align: left;
+    }
+    .user-left .username {
+        font-size: 20px;
+        font-weight: 600;
+    }
+    .user-left .balance {
+        font-size: 16px;
+        color: var(--primary-color);
+        margin-top: 3px;
+    }
 
+    .logo-area {
+        text-align: right;
+    }
     .logo-area img {
-        width: 60px; height: 60px;
+        width: 60px;
+        height: 60px;
         border-radius: 10px;
         border: 1px solid rgba(0,255,200,0.3);
         object-fit: cover;
     }
-
-    .bot-name { font-size: 22px; font-weight: 700; margin-top: 5px; }
-    .token-name { font-size: 17px; margin-top: 3px; }
-    .token-ticker { font-size: 15px; opacity: 0.7; }
+    .bot-name {
+        font-size: 22px;
+        font-weight: 700;
+        margin-top: 5px;
+    }
+    .token-name {
+        font-size: 17px;
+        margin-top: 3px;
+    }
+    .token-ticker {
+        font-size: 15px;
+        opacity: 0.7;
+    }
 
     .middle-section {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-top: 25px;
-        z-index: 2;
         position: relative;
+        z-index: 2;
     }
 
-    .ref-sec { width: 25%; text-align: center; }
+    .ref-sec {
+        width: 25%;
+        text-align: center;
+    }
     .ref-sec img {
         width: 100px;
         height: 100px;
+        margin-bottom: 10px;
         border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
         object-fit: cover;
     }
-
     .ref-text {
         font-size: 13px;
         line-height: 16px;
+        word-wrap: break-word;
         background: rgba(0,0,0,0.5);
         padding: 8px;
         border-radius: 6px;
-        margin-top: 6px;
     }
 
     .rocket-sec img {
         width: 260px;
+        height: auto;
         filter: drop-shadow(0 0 10px rgba(100,200,255,0.4));
+        transition: transform 0.5s ease;
+    }
+
+    .rocket-sec img:hover {
+        transform: translateY(-10px);
     }
 
     .pnl-box {
         width: 40%;
-        background: rgba(17,17,17,0.7);
+        background: rgba(17, 17, 17, 0.7);
         padding: 18px;
         border-radius: 18px;
-        border: 1px solid rgba(0,255,200,0.35);
         box-shadow: 0 0 20px rgba(0,255,200,0.25);
+        border: 1px solid rgba(0,255,200,0.35);
+        text-align: left;
         backdrop-filter: blur(5px);
     }
-
-    .pnl-title { font-size: 22px; margin-bottom: 8px; }
-    .pnl-value { font-size: 34px; font-weight: 800; }
-
-    .pnl-value.profit { color: #00ff7b; }
-    .pnl-value.loss { color: #ff3b3b; }
+    .pnl-title {
+        font-size: 22px;
+        margin-bottom: 8px;
+    }
+    .pnl-value {
+        font-size: 34px;
+        font-weight: 800;
+        text-shadow: 0 0 10px rgba(0,255,123,0.15);
+        transition: all 0.3s ease;
+    }
+    .pnl-value.profit {
+        color: var(--profit-color);
+        text-shadow: 0 0 10px rgba(0,255,123,0.5);
+    }
+    .pnl-value.loss {
+        color: var(--loss-color);
+        text-shadow: 0 0 10px rgba(255,59,59,0.5);
+    }
 
     .chart-thumb {
         margin-top: 15px;
         width: 100%;
         height: 70px;
-        background: #111;
+        background: linear-gradient(45deg, #0d0d0d, #1a1a1a);
         border-radius: 10px;
         border: 1px solid rgba(255,255,255,0.1);
         position: relative;
         overflow: hidden;
     }
-
+    
+    .chart-line {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to top, rgba(0,255,200,0.7) 0%, transparent 100%);
+        clip-path: polygon(
+            0% 100%,
+            10% 80%,
+            20% 85%,
+            30% 70%,
+            40% 75%,
+            50% 60%,
+            60% 65%,
+            70% 50%,
+            80% 55%,
+            90% 40%,
+            100% 45%,
+            100% 100%
+        );
+    }
+    
+    .chart-line.loss {
+        background: linear-gradient(to top, rgba(255,59,59,0.7) 0%, transparent 100%);
+        clip-path: polygon(
+            0% 100%,
+            10% 85%,
+            20% 80%,
+            30% 90%,
+            40% 85%,
+            50% 95%,
+            60% 90%,
+            70% 100%,
+            80% 95%,
+            90% 100%,
+            100% 95%,
+            100% 100%
+        );
+    }
+    
     .chart-grid {
         position: absolute;
-        inset: 0;
-        background-image:
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
             linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
         background-size: 20px 20px;
     }
 
-    .chart-line {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(0,255,200,0.7), transparent);
-        clip-path: polygon(0% 100%, 10% 80%, 20% 85%, 30% 70%, 40% 75%, 50% 60%, 60% 65%, 70% 50%, 80% 55%, 90% 40%, 100% 45%, 100% 100%);
-    }
-
-    .chart-line.loss {
-        background: linear-gradient(to top, rgba(255,59,59,0.7), transparent);
-        clip-path: polygon(0% 100%, 10% 85%, 20% 80%, 30% 90%, 40% 85%, 50% 95%, 60% 90%, 70% 100%, 80% 95%, 90% 100%, 100% 95%, 100% 100%);
-    }
-
     .download-btn {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #00ffc8;
+        background: var(--primary-color);
+        color: var(--bg-dark);
+        border: none;
         padding: 12px 20px;
         border-radius: 8px;
         font-weight: bold;
-        border: none;
         cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        font-family: "Poppins", sans-serif;
+    }
+
+    .download-btn:hover {
+        background: #00e6b3;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,255,200,0.4);
+    }
+
+    .download-btn:disabled {
+        background: #666;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        width: 90%;
+        max-width: 950px;
+    }
+
+    .action-buttons button {
+        flex: 1;
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: "Poppins", sans-serif;
+        border: none;
+    }
+
+    .share-btn {
+        background: #4a6cf7;
+        color: white;
+    }
+
+    .share-btn:hover {
+        background: #3a5ce5;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(74, 108, 247, 0.4);
+    }
+
+    .reset-btn {
+        background: #666;
+        color: white;
+    }
+
+    .reset-btn:hover {
+        background: #555;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 102, 102, 0.4);
+    }
+
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        background: var(--primary-color);
+        color: var(--bg-dark);
+        font-weight: bold;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        z-index: 10000;
+        transform: translateX(150%);
+        transition: transform 0.3s ease;
+    }
+
+    .notification.show {
+        transform: translateX(0);
+    }
+
+    @media (max-width: 768px) {
+        .middle-section {
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .ref-sec, .pnl-box {
+            width: 100%;
+        }
+        
+        .rocket-sec img {
+            width: 200px;
+        }
+        
+        .controls-panel {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
-</head>
 
+</head>
 <body>
 
-<button class="download-btn" id="downloadBtn">📥 Download Card</button>
+<!-- Notification -->
+<div class="notification" id="notification"></div>
 
-<div class="pnl-card" id="pnlCard">
-
-    <div class="top-row">
-        <div>
-            <div class="username" id="username">@CryptoTrader</div>
-            <div class="balance" id="balance">Balance: 12,500 ALG</div>
+<div class="container">
+    <!-- Controls Panel -->
+    <div class="controls-panel">
+        <div class="control-group">
+            <label for="usernameInput">Username</label>
+            <input type="text" id="usernameInput" placeholder="@CryptoTrader">
         </div>
-
-        <div class="logo-area">
-            <img id="logoImg" src="logo.jpg" crossorigin="anonymous">
-            <div class="bot-name">ALGORN</div>
-            <div class="token-name" id="tokenName">Algorand</div>
-            <div class="token-ticker" id="tokenTicker">ALG</div>
+        <div class="control-group">
+            <label for="balanceInput">Balance</label>
+            <input type="text" id="balanceInput" placeholder="12,500 ALG">
+        </div>
+        <div class="control-group">
+            <label for="tokenNameInput">Token Name</label>
+            <input type="text" id="tokenNameInput" placeholder="Algorand">
+        </div>
+        <div class="control-group">
+            <label for="tokenTickerInput">Token Ticker</label>
+            <input type="text" id="tokenTickerInput" placeholder="ALG">
+        </div>
+        <div class="control-group">
+            <label for="pnlValueInput">PNL Value</label>
+            <input type="text" id="pnlValueInput" placeholder="+45.3%">
+        </div>
+        <div class="control-group">
+            <label for="pnlTypeSelect">PNL Type</label>
+            <select id="pnlTypeSelect">
+                <option value="profit">Profit</option>
+                <option value="loss">Loss</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="referralLinkInput">Referral Link</label>
+            <input type="text" id="referralLinkInput" placeholder="https://t.me/algornbot?start=CRYPTO123">
         </div>
     </div>
 
-    <div class="middle-section">
+    <!-- PNL Card -->
+    <div class="pnl-card" id="pnlCard">
+        <!-- TOP ROW -->
+        <div class="top-row">
+            <!-- Left: User Info -->
+            <div class="user-left">
+                <div class="username" id="username">@CryptoTrader</div>
+                <div class="balance" id="balance">Balance: 12,500 ALG</div>
+            </div>
 
-        <div class="ref-sec">
-            <img id="qrCode"
-                 src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://t.me/algornbot?start=CRYPTO123"
-                 crossorigin="anonymous">
-            <div class="ref-text" id="referralLink">
-                Referral:<br>https://t.me/algornbot?start=CRYPTO123
+            <!-- Right: Logo + Bot Name + Token info -->
+            <div class="logo-area">
+                <!-- set crossOrigin for html2canvas -->
+                <img id="logoImg" src="logo.jpg" alt="">
+                <div class="bot-name">ALGORN</div>
+                <div class="token-name" id="tokenName">Algorand</div>
+                <div class="token-ticker" id="tokenTicker">ALG</div>
             </div>
         </div>
 
-        <div class="rocket-sec">
-            <img id="rocketImg" src="rocket.png" crossorigin="anonymous">
-        </div>
+        <!-- MIDDLE SECTION -->
+        <div class="middle-section">
+            <!-- LEFT REFERRAL ADDRESS + QR -->
+            <div class="ref-sec">
+                <img id="qrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://t.me/algornbot?start=CRYPTO123" alt="QR Code">
+                <div class="ref-text" id="referralLink">
+                    Referral:<br>
+                    https://t.me/algornbot?start=CRYPTO123
+                </div>
+            </div>
 
-        <div class="pnl-box">
-            <div class="pnl-title">PNL</div>
-            <div class="pnl-value profit" id="pnlValue">+45.3%</div>
+            <!-- ROCKET IMAGE -->
+            <div class="rocket-sec">
+                <img id="rocketImg" src="rocket.png" alt="">
+            </div>
 
-            <div class="chart-thumb">
-                <div class="chart-grid"></div>
-                <div class="chart-line" id="chartLine"></div>
+            <!-- PNL BOX -->
+            <div class="pnl-box">
+                <div class="pnl-title">PNL</div>
+                <div class="pnl-value" id="pnlValue">+45.3%</div>
+                <div class="chart-thumb">
+                    <div class="chart-grid"></div>
+                    <div class="chart-line" id="chartLine"></div>
+                </div>
             </div>
         </div>
+    </div>
 
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button class="download-btn" id="downloadBtn">📥 Download Card</button>
+        <button class="share-btn" id="shareBtn">🔗 Share Card</button>
+        <button class="reset-btn" id="resetBtn">🔄 Reset</button>
     </div>
 </div>
 
-<!-- Accurate image export -->
-<script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@2.8.0/dist/dom-to-image-more.min.js"></script>
-
 <script>
-document.getElementById("downloadBtn").addEventListener("click", function () {
+// Get URL parameters
+function getUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        username: params.get('username') || '@CryptoTrader',
+        balance: params.get('balance') || '12,500 ALG',
+        tokenName: params.get('tokenName') || 'Algorand',
+        tokenTicker: params.get('tokenTicker') || 'ALG',
+        pnlValue: params.get('pnlValue') || '+45.3%',
+        pnlType: params.get('pnlType') || 'profit',
+        referralLink: params.get('referralLink') || 'https://t.me/algornbot?start=CRYPTO123'
+    };
+}
 
-    const node = document.getElementById("pnlCard");
-    const scale = 3;
+// Apply parameters to the page
+function applyUrlParams() {
+    const params = getUrlParams();
+    console.log('URL Parameters:', params); // Debug log
 
-    domtoimage.toBlob(node, {
-        width: node.offsetWidth * scale,
-        height: node.offsetHeight * scale,
-        style: {
-            transform: "scale(" + scale + ")",
-            transformOrigin: "top left",
-            width: node.offsetWidth + "px",
-            height: node.offsetHeight + "px"
-        }
-    })
-    .then(function (blob) {
-        const link = document.createElement("a");
-        link.download = "pnl-card.png";
-        link.href = URL.createObjectURL(blob);
+    // Update username
+    const usernameElement = document.getElementById('username');
+    if (usernameElement) usernameElement.textContent = params.username;
+
+    // Update balance
+    const balanceElement = document.getElementById('balance');
+    if (balanceElement) balanceElement.textContent = `Balance: ${params.balance}`;
+
+    // Update token info
+    const tokenNameElement = document.getElementById('tokenName');
+    if (tokenNameElement) tokenNameElement.textContent = params.tokenName;
+
+    const tokenTickerElement = document.getElementById('tokenTicker');
+    if (tokenTickerElement) tokenTickerElement.textContent = params.tokenTicker;
+
+    // Update PnL value and styling (DO NOT use decodeURIComponent here)
+    const pnlValueElement = document.getElementById('pnlValue');
+    if (pnlValueElement) {
+        pnlValueElement.textContent = params.pnlValue;
+        pnlValueElement.classList.remove('profit', 'loss');
+        pnlValueElement.classList.add(params.pnlType === 'loss' ? 'loss' : 'profit');
+    }
+
+    // Update chart line styling
+    const chartLineElement = document.getElementById('chartLine');
+    if (chartLineElement) {
+        chartLineElement.classList.remove('loss');
+        if (params.pnlType === 'loss') chartLineElement.classList.add('loss');
+    }
+
+    // Update referral link and QR code
+    const referralLinkElement = document.getElementById('referralLink');
+    if (referralLinkElement) {
+        // escape HTML to avoid accidental injection
+        referralLinkElement.innerHTML = 'Referral:<br>' + escapeHtml(params.referralLink);
+    }
+
+    const qrCodeElement = document.getElementById('qrCode');
+    if (qrCodeElement) {
+        qrCodeElement.src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(params.referralLink);
+        qrCodeElement.setAttribute('crossorigin', 'anonymous');
+    }
+
+    // Update form inputs
+    document.getElementById('usernameInput').value = params.username;
+    document.getElementById('balanceInput').value = params.balance;
+    document.getElementById('tokenNameInput').value = params.tokenName;
+    document.getElementById('tokenTickerInput').value = params.tokenTicker;
+    document.getElementById('pnlValueInput').value = params.pnlValue;
+    document.getElementById('pnlTypeSelect').value = params.pnlType;
+    document.getElementById('referralLinkInput').value = params.referralLink;
+}
+
+// small helper to escape HTML in referral text
+function escapeHtml(unsafe) {
+    return unsafe.replace(/[&<"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','"':'&quot;',"'":'&#039;'}[m];
+    });
+}
+
+// Preload <img> tags and CSS background-image used in .pnl-card::before
+function preloadAllImages() {
+    const images = Array.from(document.images).map(img => img.src).filter(Boolean);
+
+    // attempt to read .pnl-card::before background-image
+    try {
+        const pnl = document.querySelector('.pnl-card');
+        const styleBefore = getComputedStyle(pnl, '::before').getPropertyValue('background-image');
+        // styleBefore looks like: url("...") or none
+        const urlMatch = styleBefore.match(/url\((?:'|")?(.*?)(?:'|")?\)/);
+        if (urlMatch && urlMatch[1]) images.push(urlMatch[1]);
+    } catch (e) {
+        // ignore
+    }
+
+    // dedupe
+    const unique = [...new Set(images)];
+
+    return Promise.all(unique.map(src => new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve({src, ok: true});
+        img.onerror = () => resolve({src, ok: false});
+        img.src = src;
+        // also add timeout fallback
+        setTimeout(() => resolve({src, ok: false}), 4000);
+    })));
+}
+
+// Download function using html2canvas
+function downloadCard() {
+    // load html2canvas from CDN if not already loaded
+    if (typeof html2canvas === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onload = function() {
+            captureAndDownload();
+        };
+        document.head.appendChild(script);
+    } else {
+        captureAndDownload();
+    }
+}
+
+function captureAndDownload() {
+    const cardElement = document.getElementById('pnlCard');
+
+    // html2canvas options: useCORS true and allowTaint false to avoid tainted canvases
+    html2canvas(cardElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#0d0d0d',
+        logging: false,
+        // try foreignObjectRendering as fallback
+        foreignObjectRendering: true
+    }).then(canvas => {
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `pnl-card-${Date.now()}.png`;
+        link.href = image;
+        document.body.appendChild(link);
         link.click();
-    })
-    .catch(function (error) {
-        console.error(error);
-        alert("Failed to generate image. Ensure images are hosted with CORS enabled.");
+        document.body.removeChild(link);
+        showNotification('Card downloaded successfully!');
+    }).catch(error => {
+        console.error('Error capturing card:', error);
+        showNotification('Error: could not capture the card. Try hosting images with CORS enabled.', true);
+    });
+}
+
+// Share function to generate shareable URL
+function shareCard() {
+    const params = new URLSearchParams();
+    
+    params.set('username', document.getElementById('usernameInput').value);
+    params.set('balance', document.getElementById('balanceInput').value);
+    params.set('tokenName', document.getElementById('tokenNameInput').value);
+    params.set('tokenTicker', document.getElementById('tokenTickerInput').value);
+    params.set('pnlValue', document.getElementById('pnlValueInput').value);
+    params.set('pnlType', document.getElementById('pnlTypeSelect').value);
+    params.set('referralLink', document.getElementById('referralLinkInput').value);
+    
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    
+    // Update the page with the new parameters
+    applyUrlParams();
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        showNotification('Shareable URL copied to clipboard!');
+    }).catch(() => {
+        // Fallback if clipboard API is not available
+        prompt('Copy this URL to share:', shareUrl);
+        showNotification('Shareable URL generated!');
+    });
+}
+
+// Reset form and card to default values
+function resetCard() {
+    document.getElementById('usernameInput').value = '@CryptoTrader';
+    document.getElementById('balanceInput').value = '12,500 ALG';
+    document.getElementById('tokenNameInput').value = 'Algorand';
+    document.getElementById('tokenTickerInput').value = 'ALG';
+    document.getElementById('pnlValueInput').value = '+45.3%';
+    document.getElementById('pnlTypeSelect').value = 'profit';
+    document.getElementById('referralLinkInput').value = 'https://t.me/algornbot?start=CRYPTO123';
+    
+    applyUrlParams();
+    showNotification('Card reset to default values!');
+}
+
+// Show notification
+function showNotification(message, isError = false) {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.style.background = isError ? '#ff3b3b' : '#00ffc8';
+    notification.style.color = isError ? 'white' : '#0d0d0d';
+    
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+// Update card when form inputs change
+function setupFormListeners() {
+    const inputs = [
+        'usernameInput',
+        'balanceInput',
+        'tokenNameInput',
+        'tokenTickerInput',
+        'pnlValueInput',
+        'pnlTypeSelect',
+        'referralLinkInput'
+    ];
+    
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', applyFormValues);
+    });
+}
+
+// Apply form values to card
+function applyFormValues() {
+    document.getElementById('username').textContent = document.getElementById('usernameInput').value;
+    document.getElementById('balance').textContent = `Balance: ${document.getElementById('balanceInput').value}`;
+    document.getElementById('tokenName').textContent = document.getElementById('tokenNameInput').value;
+    document.getElementById('tokenTicker').textContent = document.getElementById('tokenTickerInput').value;
+    
+    const pnlValueElement = document.getElementById('pnlValue');
+    pnlValueElement.textContent = document.getElementById('pnlValueInput').value;
+    pnlValueElement.classList.remove('profit', 'loss');
+    pnlValueElement.classList.add(document.getElementById('pnlTypeSelect').value === 'loss' ? 'loss' : 'profit');
+    
+    const chartLineElement = document.getElementById('chartLine');
+    chartLineElement.classList.remove('loss');
+    if (document.getElementById('pnlTypeSelect').value === 'loss') {
+        chartLineElement.classList.add('loss');
+    }
+    
+    const referralLink = document.getElementById('referralLinkInput').value;
+    document.getElementById('referralLink').innerHTML = 'Referral:<br>' + escapeHtml(referralLink);
+    
+    const qrCodeElement = document.getElementById('qrCode');
+    qrCodeElement.src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(referralLink);
+}
+
+// Wait for everything to load (images/backgrounds), then enable download
+async function init() {
+    applyUrlParams();
+    setupFormListeners();
+
+    // wait for DOM images to be added/updated (small delay)
+    await new Promise(r => setTimeout(r, 100));
+
+    // preload images and css background
+    const results = await preloadAllImages();
+    console.log('Preload results:', results);
+
+    // enable download button
+    const downloadBtn = document.getElementById('downloadBtn');
+    downloadBtn.disabled = false;
+    downloadBtn.addEventListener('click', () => {
+        // capture after a short delay to ensure any final paints complete
+        setTimeout(downloadCard, 150);
+    });
+
+    // Setup share button
+    document.getElementById('shareBtn').addEventListener('click', shareCard);
+    
+    // Setup reset button
+    document.getElementById('resetBtn').addEventListener('click', resetCard);
+}
+
+// Auto-apply parameters when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, applying URL parameters...');
+    init().catch(e => {
+        console.error('Init error:', e);
+        applyUrlParams(); // at least apply params even if preload fails
     });
 });
 </script>
