@@ -317,29 +317,72 @@
 
 <script>
 // Get URL parameters
-const urlParams = new URLSearchParams(window.location.search);
+function getUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        username: params.get('username') || '@CryptoTrader',
+        balance: params.get('balance') || '12,500 ALG',
+        tokenName: params.get('tokenName') || 'Algorand',
+        tokenTicker: params.get('tokenTicker') || 'ALG',
+        pnlValue: params.get('pnlValue') || '+45.3%',
+        pnlType: params.get('pnlType') || 'profit',
+        referralLink: params.get('referralLink') || 'https://t.me/algornbot?start=CRYPTO123'
+    };
+}
 
-// Set dynamic values from URL parameters
-document.getElementById('username').textContent = urlParams.get('username') || '@CryptoTrader';
-document.getElementById('balance').textContent = `Balance: ${urlParams.get('balance') || '12,500 ALG'}`;
-document.getElementById('tokenName').textContent = urlParams.get('tokenName') || 'Algorand';
-document.getElementById('tokenTicker').textContent = urlParams.get('tokenTicker') || 'ALG';
-
-// PnL value and styling
-const pnlValue = urlParams.get('pnlValue') || '+45.3%';
-const pnlType = urlParams.get('pnlType') || 'profit';
-const pnlElement = document.getElementById('pnlValue');
-pnlElement.textContent = pnlValue;
-pnlElement.className = `pnl-value ${pnlType}`;
-
-// Chart line styling
-const chartLine = document.getElementById('chartLine');
-chartLine.className = `chart-line ${pnlType}`;
-
-// Referral link and QR code
-const referralLink = urlParams.get('referralLink') || 'https://t.me/algornbot?start=CRYPTO123';
-document.getElementById('referralLink').innerHTML = `Referral:<br>${referralLink}`;
-document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(referralLink)}`;
+// Apply parameters to the page
+function applyUrlParams() {
+    const params = getUrlParams();
+    
+    console.log('URL Parameters:', params); // Debug log
+    
+    // Update username
+    const usernameElement = document.getElementById('username');
+    if (usernameElement) {
+        usernameElement.textContent = params.username;
+    }
+    
+    // Update balance
+    const balanceElement = document.getElementById('balance');
+    if (balanceElement) {
+        balanceElement.textContent = `Balance: ${params.balance}`;
+    }
+    
+    // Update token info
+    const tokenNameElement = document.getElementById('tokenName');
+    if (tokenNameElement) {
+        tokenNameElement.textContent = params.tokenName;
+    }
+    
+    const tokenTickerElement = document.getElementById('tokenTicker');
+    if (tokenTickerElement) {
+        tokenTickerElement.textContent = params.tokenTicker;
+    }
+    
+    // Update PnL value and styling
+    const pnlValueElement = document.getElementById('pnlValue');
+    if (pnlValueElement) {
+        pnlValueElement.textContent = decodeURIComponent(params.pnlValue);
+        pnlValueElement.className = `pnl-value ${params.pnlType}`;
+    }
+    
+    // Update chart line styling
+    const chartLineElement = document.getElementById('chartLine');
+    if (chartLineElement) {
+        chartLineElement.className = `chart-line ${params.pnlType}`;
+    }
+    
+    // Update referral link and QR code
+    const referralLinkElement = document.getElementById('referralLink');
+    if (referralLinkElement) {
+        referralLinkElement.innerHTML = `Referral:<br>${params.referralLink}`;
+    }
+    
+    const qrCodeElement = document.getElementById('qrCode');
+    if (qrCodeElement) {
+        qrCodeElement.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(params.referralLink)}`;
+    }
+}
 
 // Download function using html2canvas
 function downloadCard() {
@@ -363,7 +406,8 @@ function captureAndDownload() {
         scale: 2, // Higher quality
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#0d0d0d'
+        backgroundColor: '#0d0d0d',
+        logging: true
     }).then(canvas => {
         // Convert canvas to image
         const image = canvas.toDataURL('image/png');
@@ -372,12 +416,33 @@ function captureAndDownload() {
         const link = document.createElement('a');
         link.download = `pnl-card-${Date.now()}.png`;
         link.href = image;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+    }).catch(error => {
+        console.error('Error capturing card:', error);
+        alert('Error downloading card. Please try again.');
     });
 }
 
-// Auto-download after 1 second (optional)
-// setTimeout(downloadCard, 1000);
+// Auto-apply parameters when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, applying URL parameters...');
+    applyUrlParams();
+    
+    // Auto-download after 1.5 seconds (optional)
+    setTimeout(() => {
+        console.log('Auto-downloading card...');
+        downloadCard();
+    }, 1500);
+});
+
+// Also apply parameters if page is already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyUrlParams);
+} else {
+    applyUrlParams();
+}
 </script>
 
 </body>
