@@ -49,7 +49,7 @@
         z-index: 1;
     }
 
-    /* Blurry background image */
+    /* Blurry background image (kept as pseudo-element but will be preloaded in JS) */
     .pnl-card::before {
         content: '';
         position: absolute;
@@ -72,7 +72,6 @@
         z-index: 2;
     }
 
-    /* Left user info */
     .user-left {
         text-align: left;
     }
@@ -86,7 +85,6 @@
         margin-top: 3px;
     }
 
-    /* Right logo + bot name */
     .logo-area {
         text-align: right;
     }
@@ -95,6 +93,7 @@
         height: 60px;
         border-radius: 10px;
         border: 1px solid rgba(0,255,200,0.3);
+        object-fit: cover;
     }
     .bot-name {
         font-size: 22px;
@@ -110,7 +109,6 @@
         opacity: 0.7;
     }
 
-    /* Middle section with QR + rocket + PnL */
     .middle-section {
         display: flex;
         justify-content: space-between;
@@ -120,7 +118,6 @@
         z-index: 2;
     }
 
-    /* Left QR + referral */
     .ref-sec {
         width: 25%;
         text-align: center;
@@ -131,6 +128,7 @@
         margin-bottom: 10px;
         border-radius: 8px;
         border: 1px solid rgba(255,255,255,0.2);
+        object-fit: cover;
     }
     .ref-text {
         font-size: 13px;
@@ -141,14 +139,12 @@
         border-radius: 6px;
     }
 
-    /* Rocket image */
     .rocket-sec img {
         width: 260px;
         height: auto;
         filter: drop-shadow(0 0 10px rgba(100,200,255,0.4));
     }
 
-    /* PNL BOX */
     .pnl-box {
         width: 40%;
         background: rgba(17, 17, 17, 0.7);
@@ -163,20 +159,20 @@
         font-size: 22px;
         margin-bottom: 8px;
     }
-    .pnl-value.profit {
+    .pnl-value {
         font-size: 34px;
-        color: #00ff7b;
         font-weight: 800;
+        text-shadow: 0 0 10px rgba(0,255,123,0.15);
+    }
+    .pnl-value.profit {
+        color: #00ff7b;
         text-shadow: 0 0 10px rgba(0,255,123,0.5);
     }
     .pnl-value.loss {
-        font-size: 34px;
         color: #ff3b3b;
-        font-weight: 800;
         text-shadow: 0 0 10px rgba(255,59,59,0.5);
     }
 
-    /* Chart thumbnail */
     .chart-thumb {
         margin-top: 15px;
         width: 100%;
@@ -188,7 +184,6 @@
         overflow: hidden;
     }
     
-    /* Chart line visualization */
     .chart-line {
         position: absolute;
         bottom: 0;
@@ -230,7 +225,6 @@
         );
     }
     
-    /* Grid lines for chart */
     .chart-grid {
         position: absolute;
         top: 0;
@@ -243,7 +237,6 @@
         background-size: 20px 20px;
     }
 
-    /* Download button */
     .download-btn {
         position: fixed;
         top: 20px;
@@ -263,7 +256,7 @@
 <body>
 
 <!-- Download Button -->
-<button class="download-btn" onclick="downloadCard()">📥 Download Card</button>
+<button class="download-btn" id="downloadBtn">📥 Download Card</button>
 
 <div class="pnl-card" id="pnlCard">
 
@@ -278,7 +271,8 @@
 
         <!-- Right: Logo + Bot Name + Token info -->
         <div class="logo-area">
-            <img src="logo.jpg" alt="">
+            <!-- set crossOrigin for html2canvas -->
+            <img id="logoImg" src="logo.jpg" alt="">
             <div class="bot-name">ALGORN</div>
             <div class="token-name" id="tokenName">Algorand</div>
             <div class="token-ticker" id="tokenTicker">ALG</div>
@@ -299,7 +293,7 @@
 
         <!-- ROCKET IMAGE -->
         <div class="rocket-sec">
-            <img src="rocket.png" alt="">
+            <img id="rocketImg" src="rocket.png" alt="">
         </div>
 
         <!-- PNL BOX -->
@@ -333,60 +327,91 @@ function getUrlParams() {
 // Apply parameters to the page
 function applyUrlParams() {
     const params = getUrlParams();
-    
     console.log('URL Parameters:', params); // Debug log
-    
+
     // Update username
     const usernameElement = document.getElementById('username');
-    if (usernameElement) {
-        usernameElement.textContent = params.username;
-    }
-    
+    if (usernameElement) usernameElement.textContent = params.username;
+
     // Update balance
     const balanceElement = document.getElementById('balance');
-    if (balanceElement) {
-        balanceElement.textContent = `Balance: ${params.balance}`;
-    }
-    
+    if (balanceElement) balanceElement.textContent = `Balance: ${params.balance}`;
+
     // Update token info
     const tokenNameElement = document.getElementById('tokenName');
-    if (tokenNameElement) {
-        tokenNameElement.textContent = params.tokenName;
-    }
-    
+    if (tokenNameElement) tokenNameElement.textContent = params.tokenName;
+
     const tokenTickerElement = document.getElementById('tokenTicker');
-    if (tokenTickerElement) {
-        tokenTickerElement.textContent = params.tokenTicker;
-    }
-    
-    // Update PnL value and styling
+    if (tokenTickerElement) tokenTickerElement.textContent = params.tokenTicker;
+
+    // Update PnL value and styling (DO NOT use decodeURIComponent here)
     const pnlValueElement = document.getElementById('pnlValue');
     if (pnlValueElement) {
-        pnlValueElement.textContent = decodeURIComponent(params.pnlValue);
-        pnlValueElement.className = `pnl-value ${params.pnlType}`;
+        pnlValueElement.textContent = params.pnlValue;
+        pnlValueElement.classList.remove('profit', 'loss');
+        pnlValueElement.classList.add(params.pnlType === 'loss' ? 'loss' : 'profit');
     }
-    
+
     // Update chart line styling
     const chartLineElement = document.getElementById('chartLine');
     if (chartLineElement) {
-        chartLineElement.className = `chart-line ${params.pnlType}`;
+        chartLineElement.classList.remove('loss');
+        if (params.pnlType === 'loss') chartLineElement.classList.add('loss');
     }
-    
+
     // Update referral link and QR code
     const referralLinkElement = document.getElementById('referralLink');
     if (referralLinkElement) {
-        referralLinkElement.innerHTML = `Referral:<br>${params.referralLink}`;
+        // escape HTML to avoid accidental injection
+        referralLinkElement.innerHTML = 'Referral:<br>' + escapeHtml(params.referralLink);
     }
-    
+
     const qrCodeElement = document.getElementById('qrCode');
     if (qrCodeElement) {
-        qrCodeElement.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(params.referralLink)}`;
+        qrCodeElement.src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(params.referralLink);
+        qrCodeElement.setAttribute('crossorigin', 'anonymous');
     }
+}
+
+// small helper to escape HTML in referral text
+function escapeHtml(unsafe) {
+    return unsafe.replace(/[&<"']/g, function(m) {
+        return ({'&':'&amp;','<':'&lt;','"':'&quot;',"'":'&#039;'}[m]);
+    });
+}
+
+// Preload <img> tags and CSS background-image used in .pnl-card::before
+function preloadAllImages() {
+    const images = Array.from(document.images).map(img => img.src).filter(Boolean);
+
+    // attempt to read .pnl-card::before background-image
+    try {
+        const pnl = document.querySelector('.pnl-card');
+        const styleBefore = getComputedStyle(pnl, '::before').getPropertyValue('background-image');
+        // styleBefore looks like: url("...") or none
+        const urlMatch = styleBefore.match(/url\((?:'|")?(.*?)(?:'|")?\)/);
+        if (urlMatch && urlMatch[1]) images.push(urlMatch[1]);
+    } catch (e) {
+        // ignore
+    }
+
+    // dedupe
+    const unique = [...new Set(images)];
+
+    return Promise.all(unique.map(src => new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve({src, ok: true});
+        img.onerror = () => resolve({src, ok: false});
+        img.src = src;
+        // also add timeout fallback
+        setTimeout(() => resolve({src, ok: false}), 4000);
+    })));
 }
 
 // Download function using html2canvas
 function downloadCard() {
-    // Load html2canvas from CDN if not already loaded
+    // load html2canvas from CDN if not already loaded
     if (typeof html2canvas === 'undefined') {
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
@@ -401,18 +426,18 @@ function downloadCard() {
 
 function captureAndDownload() {
     const cardElement = document.getElementById('pnlCard');
-    
+
+    // html2canvas options: useCORS true and allowTaint false to avoid tainted canvases
     html2canvas(cardElement, {
-        scale: 2, // Higher quality
+        scale: 2,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: '#0d0d0d',
-        logging: true
+        logging: false,
+        // try foreignObjectRendering as fallback
+        foreignObjectRendering: true
     }).then(canvas => {
-        // Convert canvas to image
         const image = canvas.toDataURL('image/png');
-        
-        // Create download link
         const link = document.createElement('a');
         link.download = `pnl-card-${Date.now()}.png`;
         link.href = image;
@@ -421,28 +446,44 @@ function captureAndDownload() {
         document.body.removeChild(link);
     }).catch(error => {
         console.error('Error capturing card:', error);
-        alert('Error downloading card. Please try again.');
+        alert('Error: could not capture the card. Try hosting images with CORS enabled or use same-origin images.');
     });
+}
+
+// Wait for everything to load (images/backgrounds), then enable download
+async function init() {
+    applyUrlParams();
+
+    // wait for DOM images to be added/updated (small delay)
+    await new Promise(r => setTimeout(r, 100));
+
+    // preload images and css background
+    const results = await preloadAllImages();
+    console.log('Preload results:', results);
+
+    // enable download button
+    const downloadBtn = document.getElementById('downloadBtn');
+    downloadBtn.disabled = false;
+    downloadBtn.addEventListener('click', () => {
+        // capture after a short delay to ensure any final paints complete
+        setTimeout(downloadCard, 150);
+    });
+
+    // Optional: auto-download once everything is ready
+    setTimeout(() => {
+        // auto-download only if user wants; comment out if undesired
+        // downloadCard();
+    }, 500);
 }
 
 // Auto-apply parameters when page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Page loaded, applying URL parameters...');
-    applyUrlParams();
-    
-    // Auto-download after 1.5 seconds (optional)
-    setTimeout(() => {
-        console.log('Auto-downloading card...');
-        downloadCard();
-    }, 1500);
+    init().catch(e => {
+        console.error('Init error:', e);
+        applyUrlParams(); // at least apply params even if preload fails
+    });
 });
-
-// Also apply parameters if page is already loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyUrlParams);
-} else {
-    applyUrlParams();
-}
 </script>
 
 </body>
