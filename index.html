@@ -109,21 +109,34 @@
         border-color: var(--primary-color);
         box-shadow: 0 0 5px rgba(0,255,200,0.3);
     }
+	
+	.bg-blur {
+		position: absolute;
+		top: -20px;
+		left: -20px;
+		right: -20px;
+		bottom: -20px;
+		width: calc(100% + 40px);
+		height: calc(100% + 40px);
+		object-fit: cover;
+		filter: blur(10px) brightness(0.4);
+		z-index: -1;  /* below everything */
+		pointer-events: none;
+	}
 
-    .pnl-card {
-        width: 90%;
-        max-width: 950px;
-        background: var(--card-bg);
-        padding: 25px;
-        border-radius: 22px;
-        box-shadow: 0 0 25px rgba(0,255,200,0.35);
-        border: 1px solid rgba(0,255,200,0.25);
-        color: white;
-        position: relative;
-        overflow: hidden;
-        z-index: 1;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+	.pnl-card {
+		width: 90%;
+		max-width: 950px;
+		background: var(--card-bg);
+		padding: 25px;
+		border-radius: 22px;
+		box-shadow: 0 0 25px rgba(0,255,200,0.35);
+		border: 1px solid rgba(0,255,200,0.25);
+		color: white;
+		position: relative;
+		overflow: hidden;
+		z-index: 1;
+	}
 
     .pnl-card:hover {
         transform: translateY(-5px);
@@ -131,19 +144,45 @@
     }
 
     /* Blurry background image (kept as pseudo-element but will be preloaded in JS) */
-    .pnl-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: url('https://raw.githubusercontent.com/Prosper0013/sammy/refs/heads/main/logo.jpg');
-        background-size: cover;
-        background-position: center;
-        filter: blur(10px) brightness(0.4);
-        z-index: -1;
-    }
+	.pnl-card::before {
+		content: '';
+		position: absolute;
+		top: -20px;
+		left: -20px;
+		right: -20px;
+		bottom: -20px;
+		background-size: cover;
+		background-position: center;
+		filter: blur(12px) brightness(0.4);
+		z-index: -1;
+		/* Dynamic background will be set via JS */
+		background-image: var(--dynamic-bg, url('https://raw.githubusercontent.com/Prosper0013/sammy/refs/heads/main/logo.jpg'));
+	}
+
+	.dynamic-bg-element {
+		position: absolute;
+		top: -20px;
+		left: -20px;
+		right: -20px;
+		bottom: -20px;
+		background-size: cover;
+		background-position: center;
+		filter: blur(12px) brightness(0.4);
+		z-index: -1;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.pnl-card::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: radial-gradient(circle at top, rgba(29, 29, 29, 0.85), rgba(13, 13, 13, 0.9));
+		z-index: -1;
+	}
 
     .top-row {
         display: flex;
@@ -432,6 +471,11 @@
 
 </head>
 <body>
+<!-- Hidden background loader -->
+<img id="bgImage" 
+     src="https://raw.githubusercontent.com/Prosper0013/sammy/refs/heads/main/logo.jpg" 
+     crossOrigin="anonymous" 
+     style="display:none;">
 
 <!-- Notification -->
 <div class="notification" id="notification"></div>
@@ -474,6 +518,7 @@
 
     <!-- PNL Card -->
     <div class="pnl-card" id="pnlCard">
+	 <div class="dynamic-bg-element" id="dynamicBg"></div>
         <!-- TOP ROW -->
         <div class="top-row">
             <!-- Left: User Info -->
@@ -529,6 +574,15 @@
 </div>
 
 <script>
+window.addEventListener("load", () => {
+    const bg = document.getElementById("bgImage");
+    const card = document.getElementById("pnlCard");
+
+    bg.onload = () => {
+        card.style.setProperty("--dynamic-bg", bg.src);
+    };
+});
+
 // Get URL parameters
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
