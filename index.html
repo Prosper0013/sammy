@@ -1061,6 +1061,94 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('error', function(e) {
     console.error('Global error:', e.error);
 });
+
+// Add this to your existing script.js
+async function generatePnLImage() {
+    const cardElement = document.getElementById('pnlCard');
+    if (!cardElement) {
+        throw new Error('Card element not found');
+    }
+
+    // Use html2canvas to capture the card
+    const canvas = await html2canvas(cardElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: null,
+        logging: false
+    });
+
+    return canvas.toDataURL('image/png');
+}
+
+// Function to trigger download
+function downloadPnLImage(dataUrl, filename = 'pnl-card.png') {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Auto-download when page loads with autoDownload parameter
+function checkAutoDownload() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoDownload = urlParams.get('autoDownload');
+    
+    if (autoDownload === 'true') {
+        // Wait a bit for everything to load, then auto-download
+        setTimeout(async () => {
+            try {
+                const downloadBtn = document.getElementById('downloadBtn');
+                if (downloadBtn) {
+                    downloadBtn.textContent = '⏳ Generating...';
+                    downloadBtn.disabled = true;
+                }
+                
+                // Preload all images first
+                await preloadAllImages();
+                
+                // Generate and download
+                const dataUrl = await generatePnLImage();
+                const username = document.getElementById('username').textContent;
+                const ticker = document.getElementById('tokenTicker').textContent;
+                const filename = `pnl-${username}-${ticker}-${Date.now()}.png`.replace('@', '');
+                
+                downloadPnLImage(dataUrl, filename);
+                
+                if (downloadBtn) {
+                    downloadBtn.textContent = '📥 Download Card';
+                    downloadBtn.disabled = false;
+                }
+                
+                showNotification('PNL card downloaded successfully!');
+                
+                // Optional: Auto-close after download (for iframe)
+                if (window.top !== window.self) {
+                    setTimeout(() => {
+                        window.parent.postMessage({ type: 'downloadComplete', filename: filename }, '*');
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                console.error('Auto-download failed:', error);
+                showNotification('Error downloading card', true);
+                
+                const downloadBtn = document.getElementById('downloadBtn');
+                if (downloadBtn) {
+                    downloadBtn.textContent = '📥 Download Card';
+                    downloadBtn.disabled = false;
+                }
+            }
+        }, 2000); // Wait 2 seconds for everything to load
+    }
+}
+
+// Call this on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkAutoDownload();
+});	
 </script>
 
 </body>
