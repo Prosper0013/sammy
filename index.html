@@ -481,7 +481,7 @@
 <div class="notification" id="notification"></div>
 
 <div class="container">
-    <!-- Controls Panel -->
+    <!-- Controls Panel --
     <div class="controls-panel">
         <div class="control-group">
             <label for="usernameInput">Username</label>
@@ -514,7 +514,7 @@
             <label for="referralLinkInput">Referral Link</label>
             <input type="text" id="referralLinkInput" placeholder="https://t.me/algornbot?start=CRYPTO123">
         </div>
-    </div>
+    </div>---->
 
     <!-- PNL Card -->
     <div class="pnl-card" id="pnlCard">
@@ -593,7 +593,13 @@ function getUrlParams() {
         tokenTicker: params.get('tokenTicker') || 'ALG',
         pnlValue: params.get('pnlValue') || '+45.3%',
         pnlType: params.get('pnlType') || 'profit',
-        referralLink: params.get('referralLink') || 'https://t.me/algornbot?start=CRYPTO123'
+        referralLink: params.get('referralLink') || 'https://t.me/algornbot?start=CRYPTO123',
+        // New parameters for bot integration
+        network: params.get('network') || 'SOL',
+        walletAddress: params.get('wallet') || '',
+        tokenAddress: params.get('tokenAddress') || '',
+        initialInvestment: params.get('initial') || '',
+        currentValue: params.get('current') || ''
     };
 }
 
