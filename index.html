@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PNL Card with Background</title>
+<title>PNL Card Generator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -212,6 +212,24 @@
         );
     }
     
+    .chart-line.loss {
+        background: linear-gradient(to top, rgba(255,59,59,0.7) 0%, transparent 100%);
+        clip-path: polygon(
+            0% 100%,
+            10% 85%,
+            20% 80%,
+            30% 90%,
+            40% 85%,
+            50% 95%,
+            60% 90%,
+            70% 100%,
+            80% 95%,
+            90% 100%,
+            100% 95%,
+            100% 100%
+        );
+    }
+    
     /* Grid lines for chart */
     .chart-grid {
         position: absolute;
@@ -224,28 +242,46 @@
             linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
         background-size: 20px 20px;
     }
+
+    /* Download button */
+    .download-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #00ffc8;
+        color: #0d0d0d;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 1000;
+    }
 </style>
 
 </head>
 <body>
 
-<div class="pnl-card">
+<!-- Download Button -->
+<button class="download-btn" onclick="downloadCard()">📥 Download Card</button>
+
+<div class="pnl-card" id="pnlCard">
 
     <!-- TOP ROW -->
     <div class="top-row">
 
         <!-- Left: User Info -->
         <div class="user-left">
-            <div class="username">@CryptoTrader</div>
-            <div class="balance">Balance: 12,500 ALG</div>
+            <div class="username" id="username">@CryptoTrader</div>
+            <div class="balance" id="balance">Balance: 12,500 ALG</div>
         </div>
 
         <!-- Right: Logo + Bot Name + Token info -->
         <div class="logo-area">
             <img src="logo.jpg" alt="">
             <div class="bot-name">ALGORN</div>
-            <div class="token-name">Algorand</div>
-            <div class="token-ticker">ALG</div>
+            <div class="token-name" id="tokenName">Algorand</div>
+            <div class="token-ticker" id="tokenTicker">ALG</div>
         </div>
     </div>
 
@@ -254,8 +290,8 @@
 
         <!-- LEFT REFERRAL ADDRESS + QR -->
         <div class="ref-sec">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://t.me/algornbot?start=CRYPTO123" alt="QR Code">
-            <div class="ref-text">
+            <img id="qrCode" src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://t.me/algornbot?start=CRYPTO123" alt="QR Code">
+            <div class="ref-text" id="referralLink">
                 Referral:<br>
                 https://t.me/algornbot?start=CRYPTO123
             </div>
@@ -269,18 +305,80 @@
         <!-- PNL BOX -->
         <div class="pnl-box">
             <div class="pnl-title">PNL</div>
-
-            <!-- Change class to loss if negative -->
-            <div class="pnl-value profit">+45.3%</div>
-
+            <div class="pnl-value" id="pnlValue">+45.3%</div>
             <div class="chart-thumb">
                 <div class="chart-grid"></div>
-                <div class="chart-line"></div>
+                <div class="chart-line" id="chartLine"></div>
             </div>
         </div>
 
     </div>
 </div>
+
+<script>
+// Get URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+
+// Set dynamic values from URL parameters
+document.getElementById('username').textContent = urlParams.get('username') || '@CryptoTrader';
+document.getElementById('balance').textContent = `Balance: ${urlParams.get('balance') || '12,500 ALG'}`;
+document.getElementById('tokenName').textContent = urlParams.get('tokenName') || 'Algorand';
+document.getElementById('tokenTicker').textContent = urlParams.get('tokenTicker') || 'ALG';
+
+// PnL value and styling
+const pnlValue = urlParams.get('pnlValue') || '+45.3%';
+const pnlType = urlParams.get('pnlType') || 'profit';
+const pnlElement = document.getElementById('pnlValue');
+pnlElement.textContent = pnlValue;
+pnlElement.className = `pnl-value ${pnlType}`;
+
+// Chart line styling
+const chartLine = document.getElementById('chartLine');
+chartLine.className = `chart-line ${pnlType}`;
+
+// Referral link and QR code
+const referralLink = urlParams.get('referralLink') || 'https://t.me/algornbot?start=CRYPTO123';
+document.getElementById('referralLink').innerHTML = `Referral:<br>${referralLink}`;
+document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(referralLink)}`;
+
+// Download function using html2canvas
+function downloadCard() {
+    // Load html2canvas from CDN if not already loaded
+    if (typeof html2canvas === 'undefined') {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onload = function() {
+            captureAndDownload();
+        };
+        document.head.appendChild(script);
+    } else {
+        captureAndDownload();
+    }
+}
+
+function captureAndDownload() {
+    const cardElement = document.getElementById('pnlCard');
+    
+    html2canvas(cardElement, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#0d0d0d'
+    }).then(canvas => {
+        // Convert canvas to image
+        const image = canvas.toDataURL('image/png');
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `pnl-card-${Date.now()}.png`;
+        link.href = image;
+        link.click();
+    });
+}
+
+// Auto-download after 1 second (optional)
+// setTimeout(downloadCard, 1000);
+</script>
 
 </body>
 </html>
